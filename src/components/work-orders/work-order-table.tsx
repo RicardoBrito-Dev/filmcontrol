@@ -4,9 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Search,
-  Plus,
   MoreVertical,
-  Edit,
   Trash2,
   ClipboardList,
   Eye,
@@ -14,7 +12,8 @@ import {
   MapPin,
   Camera,
   CheckCircle2,
-  DollarSign,
+  XCircle,
+  Plus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -75,47 +74,40 @@ export function WorkOrderTable({
   return (
     <div className="space-y-4">
       {/* Filter Tabs & Search */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {['ALL', 'EM_INSTALACAO', 'CONCLUIDO', 'AGENDADO'].map((st) => (
-              <Button
-                key={st}
-                variant={selectedStatus === st ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedStatus(st)}
-                className="text-xs h-8 px-2.5 shrink-0"
-              >
-                {st === 'ALL'
-                  ? 'Todas as OS'
-                  : st === 'EM_INSTALACAO'
-                  ? 'Em Instalação'
-                  : st === 'CONCLUIDO'
-                  ? 'Concluídas'
-                  : 'Agendadas'}
-              </Button>
-            ))}
-          </div>
-
-          <Button size="sm" onClick={onAddNew} className="h-8 px-3 text-xs gap-1 shrink-0 font-semibold">
-            <Plus className="h-3.5 w-3.5" /> Nova OS
-          </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+          {[
+            { key: 'ALL', label: 'Todas as OS' },
+            { key: 'EM_INSTALACAO', label: 'Em Instalação' },
+            { key: 'CONCLUIDO', label: 'Concluídas' },
+            { key: 'AGENDADO', label: 'Agendadas' },
+          ].map(({ key, label }) => (
+            <Button
+              key={key}
+              variant={selectedStatus === key ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedStatus(key)}
+              className="text-xs h-8 px-3 shrink-0 font-medium"
+            >
+              {label}
+            </Button>
+          ))}
         </div>
 
-        <div className="relative w-full">
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Buscar por número da OS, cliente ou veículo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground transition-all"
           />
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-8 sm:p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 sm:p-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <ClipboardList className="h-6 w-6 text-muted-foreground" />
           </div>
@@ -190,7 +182,7 @@ export function WorkOrderTable({
 
                   {/* Mobile Action Buttons */}
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button asChild size="sm" variant="outline" className="text-xs gap-1">
+                    <Button asChild size="sm" variant="outline" className="text-xs gap-1 h-8">
                       <Link href={`/ordens/${order.id}`}>
                         <Eye className="h-3.5 w-3.5 text-blue-500" /> Detalhes / Fotos
                       </Link>
@@ -200,12 +192,12 @@ export function WorkOrderTable({
                       <Button
                         size="sm"
                         onClick={() => onUpdateStatus(order.id, 'CONCLUIDO')}
-                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold"
+                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-8"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> Concluir OS
                       </Button>
                     ) : (
-                      <Badge variant="success" className="justify-center py-1 text-xs font-semibold">
+                      <Badge variant="success" className="justify-center py-1 text-xs font-semibold h-8">
                         Finalizada ✓
                       </Badge>
                     )}
@@ -299,42 +291,63 @@ export function WorkOrderTable({
                         </td>
 
                         <td className="px-4 py-3.5 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/ordens/${order.id}`}
-                                  className="flex items-center gap-2 cursor-pointer"
-                                >
-                                  <Eye className="h-4 w-4 text-blue-500" /> Ver Detalhes / Fotos
-                                </Link>
-                              </DropdownMenuItem>
-                              {order.status !== 'CONCLUIDO' && (
-                                <DropdownMenuItem
-                                  onClick={() => onUpdateStatus(order.id, 'CONCLUIDO')}
-                                  className="flex items-center gap-2 cursor-pointer text-emerald-600 focus:text-emerald-600"
-                                >
-                                  <CheckCircle2 className="h-4 w-4" /> Marcar Concluída
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (confirm(`Deseja excluir a OS ${order.number}?`)) {
-                                    onDelete(order.id)
-                                  }
-                                }}
-                                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                          <div className="flex items-center justify-end gap-1.5">
+                            {order.status !== 'CONCLUIDO' ? (
+                              <Button
+                                size="sm"
+                                onClick={() => onUpdateStatus(order.id, 'CONCLUIDO')}
+                                className="h-8 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold"
                               >
-                                <Trash2 className="h-4 w-4" /> Excluir OS
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Concluir
+                              </Button>
+                            ) : (
+                              <Button asChild size="sm" variant="outline" className="h-8 text-xs gap-1">
+                                <Link href={`/ordens/${order.id}`}>
+                                  <Eye className="h-3.5 w-3.5 text-blue-500" /> Detalhes
+                                </Link>
+                              </Button>
+                            )}
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/ordens/${order.id}`}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Eye className="h-4 w-4 text-blue-500" /> Ver Detalhes / Fotos
+                                  </Link>
+                                </DropdownMenuItem>
+
+                                {order.status !== 'CANCELADO' && (
+                                  <DropdownMenuItem
+                                    onClick={() => onUpdateStatus(order.id, 'CANCELADO')}
+                                    className="flex items-center gap-2 cursor-pointer text-rose-600 focus:text-rose-600"
+                                  >
+                                    <XCircle className="h-4 w-4" /> Cancelar OS
+                                  </DropdownMenuItem>
+                                )}
+
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (confirm(`Deseja excluir a OS ${order.number}?`)) {
+                                      onDelete(order.id)
+                                    }
+                                  }}
+                                  className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Excluir OS
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </td>
                       </tr>
                     )

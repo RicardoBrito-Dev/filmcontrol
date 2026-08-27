@@ -4,18 +4,16 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Search,
-  Plus,
   MoreVertical,
-  Edit,
   Trash2,
   FileText,
   Eye,
   Car,
   MapPin,
-  MessageCircle,
   CheckCircle2,
   Calendar,
-  Calculator,
+  XCircle,
+  Plus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -26,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency, formatDate, formatPhone } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 import type { QuoteWithRelations } from '@/services/quote.service'
 
 interface QuoteTableProps {
@@ -50,7 +48,6 @@ export function QuoteTable({
   quotes,
   onDelete,
   onAddNew,
-  onOpenCalculator,
   onUpdateStatus,
 }: QuoteTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -72,60 +69,42 @@ export function QuoteTable({
   return (
     <div className="space-y-4">
       {/* Top Filter Buttons & Search */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {['ALL', 'AGUARDANDO_APROVACAO', 'APROVADO', 'ENVIADO'].map((st) => (
-              <Button
-                key={st}
-                variant={selectedStatus === st ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedStatus(st)}
-                className="text-xs h-8 px-2.5 shrink-0"
-              >
-                {st === 'ALL'
-                  ? 'Todos'
-                  : st === 'AGUARDANDO_APROVACAO'
-                  ? 'Aguardando'
-                  : st === 'APROVADO'
-                  ? 'Aprovados'
-                  : 'Enviados'}
-              </Button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            {onOpenCalculator && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenCalculator}
-                className="h-8 px-2.5 text-xs gap-1"
-              >
-                <Calculator className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Calculadora</span>
-              </Button>
-            )}
-            <Button size="sm" onClick={onAddNew} className="h-8 px-3 text-xs gap-1 font-semibold">
-              <Plus className="h-3.5 w-3.5" /> Novo
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+          {[
+            { key: 'ALL', label: 'Todos' },
+            { key: 'AGUARDANDO_APROVACAO', label: 'Aguardando' },
+            { key: 'APROVADO', label: 'Aprovados' },
+            { key: 'ENVIADO', label: 'Enviados' },
+          ].map(({ key, label }) => (
+            <Button
+              key={key}
+              variant={selectedStatus === key ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedStatus(key)}
+              className="text-xs h-8 px-3 shrink-0 font-medium"
+            >
+              {label}
             </Button>
-          </div>
+          ))}
         </div>
 
-        <div className="relative w-full">
+        {/* Search Bar */}
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
             placeholder="Buscar por número, cliente ou veículo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground transition-all"
           />
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-8 sm:p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 sm:p-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <FileText className="h-6 w-6 text-muted-foreground" />
           </div>
@@ -139,11 +118,10 @@ export function QuoteTable({
         </div>
       ) : (
         <>
-          {/* MOBILE VIEW: Touch-friendly Card List */}
+          {/* MOBILE VIEW: Cards */}
           <div className="grid gap-3 sm:hidden">
             {filtered.map((quote) => {
               const statusInfo = statusConfig[quote.status] || statusConfig.AGUARDANDO_APROVACAO
-              const cleanPhone = (quote.customer?.whatsapp || quote.customer?.phone || '').replace(/\D/g, '')
 
               return (
                 <div
@@ -182,7 +160,7 @@ export function QuoteTable({
 
                     <div className="flex justify-between items-baseline pt-1">
                       <span className="text-xs text-muted-foreground">
-                        Emitido em {formatDate(quote.created_at)}
+                        {formatDate(quote.created_at)}
                       </span>
                       <span className="text-lg font-bold text-foreground">
                         {formatCurrency(Number(quote.total))}
@@ -192,9 +170,9 @@ export function QuoteTable({
 
                   {/* Mobile Action Buttons */}
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button asChild size="sm" variant="outline" className="text-xs gap-1">
+                    <Button asChild size="sm" variant="outline" className="text-xs gap-1 h-8">
                       <Link href={`/orcamentos/${quote.id}`}>
-                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Ver / PDF
+                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Ver Proposta
                       </Link>
                     </Button>
 
@@ -202,14 +180,14 @@ export function QuoteTable({
                       <Button
                         size="sm"
                         onClick={() => onUpdateStatus(quote.id, 'APROVADO')}
-                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold"
+                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-8"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
                       </Button>
                     ) : (
-                      <Button asChild size="sm" className="text-xs gap-1 bg-primary">
+                      <Button asChild size="sm" variant="secondary" className="text-xs gap-1 h-8 font-semibold">
                         <Link href="/agenda">
-                          <Calendar className="h-3.5 w-3.5" /> Na Agenda
+                          <Calendar className="h-3.5 w-3.5 text-primary" /> Na Agenda
                         </Link>
                       </Button>
                     )}
@@ -219,7 +197,7 @@ export function QuoteTable({
             })}
           </div>
 
-          {/* DESKTOP VIEW: Full Data Table */}
+          {/* DESKTOP VIEW: Table */}
           <div className="hidden sm:block overflow-hidden rounded-xl border bg-card shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -276,7 +254,7 @@ export function QuoteTable({
                             </div>
                           ) : (
                             <span className="text-xs text-muted-foreground italic">
-                              Atendimento Loja
+                              Na Loja
                             </span>
                           )}
                         </td>
@@ -298,42 +276,63 @@ export function QuoteTable({
                         </td>
 
                         <td className="px-4 py-3.5 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/orcamentos/${quote.id}`}
-                                  className="flex items-center gap-2 cursor-pointer"
-                                >
-                                  <Eye className="h-4 w-4 text-blue-500" /> Ver / Imprimir PDF
-                                </Link>
-                              </DropdownMenuItem>
-                              {quote.status !== 'APROVADO' && (
-                                <DropdownMenuItem
-                                  onClick={() => onUpdateStatus(quote.id, 'APROVADO')}
-                                  className="flex items-center gap-2 cursor-pointer text-emerald-600 focus:text-emerald-600"
-                                >
-                                  <CheckCircle2 className="h-4 w-4" /> Marcar Aprovado
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (confirm(`Excluir o orçamento ${quote.number}?`)) {
-                                    onDelete(quote.id)
-                                  }
-                                }}
-                                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                          <div className="flex items-center justify-end gap-1.5">
+                            {quote.status !== 'APROVADO' ? (
+                              <Button
+                                size="sm"
+                                onClick={() => onUpdateStatus(quote.id, 'APROVADO')}
+                                className="h-8 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold"
                               >
-                                <Trash2 className="h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
+                              </Button>
+                            ) : (
+                              <Button asChild size="sm" variant="outline" className="h-8 text-xs gap-1">
+                                <Link href="/agenda">
+                                  <Calendar className="h-3.5 w-3.5 text-primary" /> Agenda
+                                </Link>
+                              </Button>
+                            )}
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/orcamentos/${quote.id}`}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Eye className="h-4 w-4 text-blue-500" /> Ver / Imprimir PDF
+                                  </Link>
+                                </DropdownMenuItem>
+
+                                {quote.status !== 'RECUSADO' && (
+                                  <DropdownMenuItem
+                                    onClick={() => onUpdateStatus(quote.id, 'RECUSADO')}
+                                    className="flex items-center gap-2 cursor-pointer text-rose-600 focus:text-rose-600"
+                                  >
+                                    <XCircle className="h-4 w-4" /> Marcar Recusado
+                                  </DropdownMenuItem>
+                                )}
+
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (confirm(`Excluir o orçamento ${quote.number}?`)) {
+                                      onDelete(quote.id)
+                                    }
+                                  }}
+                                  className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </td>
                       </tr>
                     )

@@ -10,13 +10,12 @@ import {
   MoreVertical,
   CheckCircle2,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
   Plus,
   Edit3,
   FileCheck,
   Play,
   Check,
+  XCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,7 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { formatDate, formatDateTime, formatPhone } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils'
 import type { AppointmentWithRelations } from '@/services/appointment.service'
 import { appointmentService } from '@/services/appointment.service'
 import { toast } from '@/hooks/use-toast'
@@ -66,7 +65,7 @@ export function CalendarView({
   onDelete,
   onAppointmentUpdated,
 }: CalendarViewProps) {
-  const [viewMode, setViewMode] = useState<'HOJE' | 'SEMANA' | 'TODOS'>('TODOS')
+  const [viewMode, setViewMode] = useState<'TODOS' | 'HOJE' | 'SEMANA'>('TODOS')
 
   // Quick Date/Time Edit Modal
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false)
@@ -158,36 +157,34 @@ export function CalendarView({
 
   return (
     <div className="space-y-4">
-      {/* Top Toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          {['TODOS', 'HOJE', 'SEMANA'].map((mode) => (
-            <Button
-              key={mode}
-              variant={viewMode === mode ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode(mode as typeof viewMode)}
-              className="text-xs capitalize"
-            >
-              {mode === 'TODOS' ? 'Todos os Agendamentos' : mode === 'HOJE' ? 'Hoje' : 'Esta Semana'}
-            </Button>
-          ))}
-        </div>
-
-        <Button onClick={onAddNew} size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> Novo Agendamento
-        </Button>
+      {/* Top Filter Toolbar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+        {[
+          { mode: 'TODOS', label: 'Todos os Agendamentos' },
+          { mode: 'HOJE', label: 'Hoje' },
+          { mode: 'SEMANA', label: 'Esta Semana' },
+        ].map(({ mode, label }) => (
+          <Button
+            key={mode}
+            variant={viewMode === mode ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode(mode as typeof viewMode)}
+            className="text-xs h-8 px-3 shrink-0 font-medium"
+          >
+            {label}
+          </Button>
+        ))}
       </div>
 
       {/* Appointment Cards Timeline */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 sm:p-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <CalendarIcon className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="text-base font-semibold">Nenhum agendamento para este período</h3>
-          <p className="text-sm text-muted-foreground mt-1 mb-4">
-            Orçamentos aprovados aparecem automaticamente aqui para você agendar a data e o horário.
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 mb-4">
+            Orçamentos aprovados entram automaticamente aqui para agendamento.
           </p>
           <Button onClick={onAddNew} size="sm" className="gap-2">
             <Plus className="h-4 w-4" /> Agendar Atendimento
@@ -196,14 +193,9 @@ export function CalendarView({
       ) : (
         <div className="grid gap-3">
           {filtered.map((apt) => {
-            const statusInfo =
-              statusBadgeConfig[apt.status] || statusBadgeConfig.AGENDADO
+            const statusInfo = statusBadgeConfig[apt.status] || statusBadgeConfig.AGENDADO
             const aptDate = new Date(apt.start_time)
-            const cleanPhone = (
-              apt.customer?.whatsapp ||
-              apt.customer?.phone ||
-              ''
-            ).replace(/\D/g, '')
+            const cleanPhone = (apt.customer?.whatsapp || apt.customer?.phone || '').replace(/\D/g, '')
 
             const timeStr = isNaN(aptDate.getTime())
               ? '--:--'
@@ -232,40 +224,42 @@ export function CalendarView({
             return (
               <div
                 key={apt.id}
-                className="rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="rounded-xl border bg-card p-3.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3.5"
               >
-                {/* Left: Time + Details */}
-                <div className="flex items-start gap-3.5">
-                  <div
+                {/* Left: Date Box + Information */}
+                <div className="flex items-start gap-3">
+                  {/* Clickable Date/Time badge */}
+                  <button
+                    type="button"
                     onClick={() => handleOpenEditDateTime(apt)}
-                    title="Clique para editar data e horário"
-                    className="flex h-16 w-20 shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 font-mono text-primary font-bold transition-colors border border-primary/20"
+                    title="Clique para alterar data e horário"
+                    className="flex h-15 w-18 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 font-mono text-primary font-bold transition-colors border border-primary/20 group"
                   >
-                    <span className="text-[10px] uppercase font-sans text-muted-foreground">
+                    <span className="text-[10px] uppercase font-sans text-muted-foreground group-hover:text-primary">
                       {dateStr}
                     </span>
                     <span className="text-sm mt-0.5">{timeStr}</span>
-                    <span className="text-[9px] font-sans text-primary/80 font-normal">
-                      Editar ✏️
+                    <span className="text-[9px] font-sans text-primary/70 font-normal">
+                      Editar
                     </span>
-                  </div>
+                  </button>
 
-                  <div className="space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-semibold text-foreground text-base">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <h4 className="font-semibold text-foreground text-sm sm:text-base">
                         {apt.title}
                       </h4>
-                      <Badge variant={statusInfo.variant} className="text-xs">
+                      <Badge variant={statusInfo.variant} className="text-[11px]">
                         {statusInfo.label}
                       </Badge>
                       {isFromQuote && (
-                        <Badge variant="success" className="gap-1 text-[11px] font-mono">
+                        <Badge variant="success" className="gap-1 text-[10px] font-mono">
                           <FileCheck className="h-3 w-3" /> Orçamento Aprovado
                         </Badge>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">
                         👤 {apt.customer?.name || 'Cliente'}
                       </span>
@@ -281,7 +275,7 @@ export function CalendarView({
                           {apt.address}
                         </span>
                       ) : (
-                        <span>📍 Atendimento na Loja</span>
+                        <span>📍 Na Loja</span>
                       )}
                     </div>
 
@@ -293,14 +287,14 @@ export function CalendarView({
                   </div>
                 </div>
 
-                {/* Right: Quick Action Buttons & Controls */}
-                <div className="flex flex-wrap items-center gap-2 self-end sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end">
-                  {/* Botões de Ação Direta de Status */}
+                {/* Right: Clean, Non-Duplicated Action Bar */}
+                <div className="flex items-center gap-2 self-end sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end">
+                  {/* Primary Status Action Button */}
                   {(apt.status === 'AGENDADO' || apt.status === 'CONFIRMADO') && (
                     <Button
                       size="sm"
                       onClick={() => onUpdateStatus(apt.id, 'EM_ANDAMENTO')}
-                      className="text-xs gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+                      className="text-xs gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold h-8 px-3"
                     >
                       <Play className="h-3.5 w-3.5" /> Iniciar Serviço
                     </Button>
@@ -310,33 +304,24 @@ export function CalendarView({
                     <Button
                       size="sm"
                       onClick={() => onUpdateStatus(apt.id, 'CONCLUIDO')}
-                      className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold animate-pulse shadow-sm"
+                      className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8 px-3 shadow-sm"
                     >
-                      <Check className="h-4 w-4" /> Concluir Instalação
+                      <Check className="h-3.5 w-3.5" /> Concluir Instalação
                     </Button>
                   )}
 
                   {apt.status === 'CONCLUIDO' && (
                     <Badge variant="success" className="gap-1 py-1 px-2.5 text-xs font-semibold">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> Serviço Finalizado
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Concluído
                     </Badge>
                   )}
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleOpenEditDateTime(apt)}
-                    className="text-xs gap-1.5"
-                  >
-                    <Edit3 className="h-3.5 w-3.5 text-primary" /> Data/Hora
-                  </Button>
 
                   {cleanPhone && (
                     <Button
                       asChild
                       size="sm"
                       variant="outline"
-                      className="gap-1.5 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-xs"
+                      className="gap-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 text-xs h-8 px-2.5"
                     >
                       <a
                         href={`https://wa.me/55${cleanPhone}?text=Olá%20${encodeURIComponent(
@@ -344,12 +329,14 @@ export function CalendarView({
                         )},%20confirmando%20nosso%20agendamento%20para%20${dateStr}%20às%20${timeStr}.`}
                         target="_blank"
                         rel="noopener noreferrer"
+                        title="Enviar mensagem no WhatsApp"
                       >
                         <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                       </a>
                     </Button>
                   )}
 
+                  {/* 3-Dots Dropdown with Secondary / Destructive Actions */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -359,36 +346,29 @@ export function CalendarView({
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem
                         onClick={() => handleOpenEditDateTime(apt)}
-                        className="cursor-pointer"
+                        className="cursor-pointer gap-2"
                       >
                         <Edit3 className="h-4 w-4 text-primary" /> Alterar Data / Horário
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onUpdateStatus(apt.id, 'EM_ANDAMENTO')}
-                        className="cursor-pointer text-amber-600 font-medium"
-                      >
-                        <Play className="h-4 w-4" /> Iniciar Serviço
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onUpdateStatus(apt.id, 'CONCLUIDO')}
-                        className="cursor-pointer text-emerald-600 font-bold"
-                      >
-                        <CheckCircle2 className="h-4 w-4" /> Marcar como Concluído
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onUpdateStatus(apt.id, 'CANCELADO')}
-                        className="cursor-pointer text-rose-600"
-                      >
-                        Cancelar Agendamento
-                      </DropdownMenuItem>
+
+                      {apt.status !== 'CANCELADO' && (
+                        <DropdownMenuItem
+                          onClick={() => onUpdateStatus(apt.id, 'CANCELADO')}
+                          className="cursor-pointer gap-2 text-rose-600 focus:text-rose-600"
+                        >
+                          <XCircle className="h-4 w-4" /> Cancelar Agendamento
+                        </DropdownMenuItem>
+                      )}
+
                       <DropdownMenuSeparator />
+
                       <DropdownMenuItem
                         onClick={() => {
                           if (confirm('Deseja excluir este agendamento?')) {
                             onDelete(apt.id)
                           }
                         }}
-                        className="cursor-pointer text-destructive focus:text-destructive"
+                        className="cursor-pointer gap-2 text-destructive focus:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" /> Excluir
                       </DropdownMenuItem>
@@ -447,7 +427,7 @@ export function CalendarView({
                 Cancelar
               </Button>
               <Button type="submit" disabled={savingDateTime}>
-                {savingDateTime ? 'Salvando...' : 'Salvar Novo Horário'}
+                {savingDateTime ? 'Salvando...' : 'Salvar Horário'}
               </Button>
             </DialogFooter>
           </form>

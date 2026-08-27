@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import {
   Search,
-  Plus,
   MoreVertical,
   Edit,
   Trash2,
   Package,
   AlertTriangle,
-  Layers,
   ArrowUpDown,
+  Plus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -66,36 +65,32 @@ export function InventoryTable({
             variant={filterLowStockOnly ? 'destructive' : 'outline'}
             size="sm"
             onClick={() => setFilterLowStockOnly(!filterLowStockOnly)}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 h-8"
           >
             <AlertTriangle className="h-3.5 w-3.5" />
             {filterLowStockOnly ? 'Filtrando: Estoque Baixo' : `Estoque Baixo (${lowStockCount})`}
           </Button>
         </div>
 
-        <Button size="sm" onClick={onAddNew} className="gap-1.5 text-xs">
-          <Plus className="h-4 w-4" /> Novo Produto
-        </Button>
-      </div>
-
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Buscar produto por nome, marca ou fornecedor..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-lg border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-        />
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar produto por nome, marca ou fornecedor..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground transition-all"
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 sm:p-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <Package className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="text-base font-semibold">Nenhum item de estoque encontrado</h3>
-          <p className="text-sm text-muted-foreground mt-1 mb-4">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 mb-4">
             {searchTerm
               ? 'Tente buscar com outros termos.'
               : 'Cadastre suas bobinas e películas para controle de saldo.'}

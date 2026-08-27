@@ -7,17 +7,14 @@ import {
   Printer,
   CheckCircle2,
   Car,
-  MapPin,
   DollarSign,
   User,
-  Clock,
   ClipboardList,
   Check,
-  Play,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { WorkOrderWithRelations } from '@/services/work-order.service'
 import { workOrderService } from '@/services/work-order.service'
@@ -68,7 +65,7 @@ export function WorkOrderDetails({ order }: WorkOrderDetailsProps) {
     try {
       await workOrderService.updatePaymentStatus(order.id, newPayment)
       setPaymentStatus(newPayment)
-      toast({ title: `Status de pagamento atualizado para ${newPayment}` })
+      toast({ title: `Pagamento atualizado para ${newPayment}` })
     } catch {
       toast({ title: 'Erro ao atualizar pagamento', variant: 'destructive' })
     }
@@ -79,14 +76,14 @@ export function WorkOrderDetails({ order }: WorkOrderDetailsProps) {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Button asChild variant="outline" size="icon">
+          <Button asChild variant="outline" size="icon" className="h-9 w-9">
             <Link href="/ordens">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
                 Ordem de Serviço #{order.number}
               </h1>
               <Badge
@@ -107,30 +104,32 @@ export function WorkOrderDetails({ order }: WorkOrderDetailsProps) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Botão de Conclusão Rápida */}
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Quick Finish Button if not completed */}
           {status !== 'CONCLUIDO' ? (
             <Button
               onClick={() => handleStatusChange('CONCLUIDO')}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 font-bold text-white shadow-sm"
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 font-bold text-white shadow-sm h-9"
             >
-              <CheckCircle2 className="h-4 w-4" /> Finalizar / Concluir Serviço
+              <CheckCircle2 className="h-4 w-4" /> Concluir Serviço
             </Button>
           ) : (
-            <Badge variant="success" className="gap-1.5 py-1.5 px-3 text-xs font-bold">
-              <Check className="h-4 w-4" /> Serviço Concluído
+            <Badge variant="success" className="gap-1.5 py-2 px-3 text-xs font-bold">
+              <Check className="h-4 w-4" /> Concluído
             </Badge>
           )}
 
-          {/* Status Changer */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground">Status:</span>
+          {/* Status Select */}
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 border">
+            <span className="text-[11px] font-medium text-muted-foreground px-1.5">Status:</span>
             <select
               value={status}
               onChange={(e) =>
                 handleStatusChange(e.target.value as WorkOrderWithRelations['status'])
               }
-              className="rounded-lg border bg-background px-2.5 py-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Status da Ordem de Serviço"
+              className="rounded-md border-0 bg-background px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
             >
               {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -140,15 +139,16 @@ export function WorkOrderDetails({ order }: WorkOrderDetailsProps) {
             </select>
           </div>
 
-          {/* Payment Changer */}
-          <div className="flex items-center gap-1.5 text-xs">
-            <span className="text-muted-foreground">Pagamento:</span>
+          {/* Payment Select */}
+          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 border">
+            <span className="text-[11px] font-medium text-muted-foreground px-1.5">Pgto:</span>
             <select
               value={paymentStatus}
               onChange={(e) =>
                 handlePaymentChange(e.target.value as WorkOrderWithRelations['payment_status'])
               }
-              className="rounded-lg border bg-background px-2.5 py-1 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-ring"
+              aria-label="Status do Pagamento"
+              className="rounded-md border-0 bg-background px-2 py-1 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
             >
               {paymentOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -158,15 +158,15 @@ export function WorkOrderDetails({ order }: WorkOrderDetailsProps) {
             </select>
           </div>
 
-          <Button variant="outline" onClick={() => window.print()} className="gap-1.5">
-            <Printer className="h-4 w-4" /> Imprimir OS
+          <Button variant="outline" onClick={() => window.print()} className="gap-1.5 h-9">
+            <Printer className="h-4 w-4" /> Imprimir
           </Button>
         </div>
       </div>
 
       {/* Info Overview Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        {/* Cliente & Destino */}
+        {/* Cliente */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">

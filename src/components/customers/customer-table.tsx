@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Search,
-  Plus,
   MoreVertical,
   Edit,
   Trash2,
@@ -12,9 +11,8 @@ import {
   MessageCircle,
   Eye,
   MapPin,
-  Building,
   User,
-  Phone,
+  Plus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -66,27 +64,21 @@ export function CustomerTable({
 
   return (
     <div className="space-y-4">
-      {/* Search & Actions toolbar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, WhatsApp, CPF/CNPJ ou endereço..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-          />
-        </div>
-
-        <Button onClick={onAddNew} size="sm" className="gap-1.5 h-9 font-semibold shrink-0">
-          <Plus className="h-4 w-4" /> Novo Cliente
-        </Button>
+      {/* Search Toolbar */}
+      <div className="relative w-full max-w-md">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Buscar por nome, WhatsApp, CPF/CNPJ ou endereço..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground transition-all"
+        />
       </div>
 
       {/* Table / List */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-8 sm:p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 sm:p-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <User className="h-6 w-6 text-muted-foreground" />
           </div>
@@ -337,50 +329,55 @@ export function CustomerTable({
 
                         {/* Ações */}
                         <td className="px-4 py-3.5 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/clientes/${customer.id}`}
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onAddVehicle(customer)}
+                              className="h-8 text-xs gap-1"
+                            >
+                              <Car className="h-3.5 w-3.5 text-primary" /> +Veículo
+                            </Button>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/clientes/${customer.id}`}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Eye className="h-4 w-4 text-blue-500" /> Ver Detalhes
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => onEdit(customer)}
                                   className="flex items-center gap-2 cursor-pointer"
                                 >
-                                  <Eye className="h-4 w-4 text-blue-500" /> Ver Detalhes
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => onAddVehicle(customer)}
-                                className="flex items-center gap-2 cursor-pointer"
-                              >
-                                <Car className="h-4 w-4 text-primary" /> Adicionar Veículo
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => onEdit(customer)}
-                                className="flex items-center gap-2 cursor-pointer"
-                              >
-                                <Edit className="h-4 w-4 text-amber-500" /> Editar Dados
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (
-                                    confirm(
-                                      `Tem certeza que deseja excluir ${customer.name}?`
-                                    )
-                                  ) {
-                                    onDelete(customer.id)
-                                  }
-                                }}
-                                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
-                              >
-                                <Trash2 className="h-4 w-4" /> Excluir Cliente
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                  <Edit className="h-4 w-4 text-amber-500" /> Editar Dados
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (
+                                      confirm(
+                                        `Tem certeza que deseja excluir ${customer.name}?`
+                                      )
+                                    ) {
+                                      onDelete(customer.id)
+                                    }
+                                  }}
+                                  className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Excluir Cliente
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </td>
                       </tr>
                     )

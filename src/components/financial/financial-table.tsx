@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import {
   Search,
-  Plus,
   MoreVertical,
   Trash2,
   DollarSign,
   ArrowDownLeft,
   ArrowUpRight,
   CheckCircle2,
-  Clock,
+  Plus,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -63,49 +62,44 @@ export function FinancialTable({
     <div className="space-y-4">
       {/* Top filter toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {['ALL', 'ENTRADA', 'SAIDA', 'PENDENTE'].map((ft) => (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+          {[
+            { key: 'ALL', label: 'Todos' },
+            { key: 'ENTRADA', label: 'Receitas' },
+            { key: 'SAIDA', label: 'Despesas' },
+            { key: 'PENDENTE', label: 'Pendentes' },
+          ].map(({ key, label }) => (
             <Button
-              key={ft}
-              variant={filterType === ft ? 'default' : 'outline'}
+              key={key}
+              variant={filterType === key ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFilterType(ft)}
-              className="text-xs"
+              onClick={() => setFilterType(key)}
+              className="text-xs h-8 px-3 shrink-0 font-medium"
             >
-              {ft === 'ALL'
-                ? 'Todos os Lançamentos'
-                : ft === 'ENTRADA'
-                ? 'Receitas (Entradas)'
-                : ft === 'SAIDA'
-                ? 'Despesas (Saídas)'
-                : 'Pendentes'}
+              {label}
             </Button>
           ))}
         </div>
 
-        <Button size="sm" onClick={onAddNew} className="gap-1.5 text-xs">
-          <Plus className="h-4 w-4" /> Novo Lançamento
-        </Button>
-      </div>
-
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Buscar por descrição ou categoria..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-lg border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-        />
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por descrição ou categoria..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground transition-all"
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-10 sm:p-14 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <DollarSign className="h-6 w-6 text-muted-foreground" />
           </div>
           <h3 className="text-base font-semibold">Nenhum lançamento encontrado</h3>
-          <p className="text-sm text-muted-foreground mt-1 mb-4">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 mb-4">
             {searchTerm
               ? 'Tente buscar com outros termos.'
               : 'Cadastre suas receitas e despesas para controle de fluxo de caixa.'}
@@ -209,38 +203,42 @@ export function FinancialTable({
 
                       {/* Ações */}
                       <td className="px-4 py-3.5 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-36">
-                            {t.status !== 'PAGO' && (
-                              <DropdownMenuItem
-                                onClick={() => onUpdateStatus(t.id, 'PAGO')}
-                                className="flex items-center gap-2 cursor-pointer text-emerald-600 focus:text-emerald-600"
-                              >
-                                <CheckCircle2 className="h-4 w-4" /> Marcar Pago
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    `Deseja excluir "${t.description}"?`
-                                  )
-                                ) {
-                                  onDelete(t.id)
-                                }
-                              }}
-                              className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                        <div className="flex items-center justify-end gap-1">
+                          {t.status !== 'PAGO' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onUpdateStatus(t.id, 'PAGO')}
+                              className="h-8 text-xs gap-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 font-medium"
                             >
-                              <Trash2 className="h-4 w-4" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <CheckCircle2 className="h-3.5 w-3.5" /> Baixar
+                            </Button>
+                          )}
+
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      `Deseja excluir "${t.description}"?`
+                                    )
+                                  ) {
+                                    onDelete(t.id)
+                                  }
+                                }}
+                                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   )
