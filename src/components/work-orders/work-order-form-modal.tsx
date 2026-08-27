@@ -479,52 +479,89 @@ export function WorkOrderFormModal({
 
             <div className="space-y-2">
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-center">
-                  <div className="col-span-6">
-                    <Input
-                      value={item.description}
-                      onChange={(e) =>
-                        handleItemChange(index, 'description', e.target.value)
-                      }
-                      placeholder="Descrição do serviço"
-                      className="text-xs h-8"
-                      required
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleItemChange(index, 'quantity', e.target.value)
-                      }
-                      className="text-xs text-center font-mono h-8"
-                    />
-                  </div>
-                  <div className="col-span-3">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={item.unit_price}
-                      onChange={(e) =>
-                        handleItemChange(index, 'unit_price', e.target.value)
-                      }
-                      className="text-xs font-mono h-8"
-                    />
-                  </div>
-                  <div className="col-span-1 flex justify-end">
-                    {items.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveItem(index)}
-                        className="h-7 w-7 text-destructive"
+                <div key={index} className="rounded-lg border bg-muted/30 p-2.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold">Item #{index + 1}</Label>
+                    {services.length > 0 && (
+                      <select
+                        onChange={(e) => {
+                          const s = services.find((srv) => srv.id === e.target.value)
+                          if (s) {
+                            handleItemChange(index, 'description', s.name)
+                            handleItemChange(index, 'unit_price', Number(s.default_price))
+                          }
+                        }}
+                        className="text-[11px] bg-card border rounded px-1.5 py-0.5 text-primary font-semibold cursor-pointer outline-none max-w-[200px]"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                        <option value="">✨ Puxar Catálogo...</option>
+                        <optgroup label="🚗 Pacotes Automotivos">
+                          {services
+                            .filter((s) => s.category === 'AUTOMOTIVO')
+                            .map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} ({formatCurrency(Number(s.default_price))})
+                              </option>
+                            ))}
+                        </optgroup>
+                        <optgroup label="🏠 Residencial, Comercial e m²">
+                          {services
+                            .filter((s) => s.category !== 'AUTOMOTIVO')
+                            .map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} ({formatCurrency(Number(s.default_price))})
+                              </option>
+                            ))}
+                        </optgroup>
+                      </select>
                     )}
+                  </div>
+                  <div className="grid grid-cols-12 gap-2 items-center">
+                    <div className="col-span-6">
+                      <Input
+                        value={item.description}
+                        onChange={(e) =>
+                          handleItemChange(index, 'description', e.target.value)
+                        }
+                        placeholder="Descrição do serviço"
+                        className="text-xs h-8"
+                        required
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleItemChange(index, 'quantity', e.target.value)
+                        }
+                        className="text-xs text-center font-mono h-8"
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={item.unit_price}
+                        onChange={(e) =>
+                          handleItemChange(index, 'unit_price', e.target.value)
+                        }
+                        className="text-xs font-mono h-8"
+                      />
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      {items.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveItem(index)}
+                          className="h-7 w-7 text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

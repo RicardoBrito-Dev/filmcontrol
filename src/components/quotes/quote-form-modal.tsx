@@ -586,14 +586,27 @@ export function QuoteFormModal({
                                   handleSelectServiceForIndex(index, e.target.value)
                                 }
                               }}
-                              className="text-[11px] bg-transparent text-primary underline cursor-pointer outline-none"
+                              className="text-[11px] bg-card border rounded px-1.5 py-0.5 text-primary font-semibold cursor-pointer outline-none max-w-[220px]"
                             >
-                              <option value="">Puxar catálogo...</option>
-                              {services.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.name} ({formatCurrency(Number(s.default_price))})
-                                </option>
-                              ))}
+                              <option value="">✨ Puxar do Catálogo Completo...</option>
+                              <optgroup label="🚗 Pacotes Automotivos">
+                                {services
+                                  .filter((s) => s.category === 'AUTOMOTIVO')
+                                  .map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                      {s.name} ({formatCurrency(Number(s.default_price))})
+                                    </option>
+                                  ))}
+                              </optgroup>
+                              <optgroup label="🏠 Residencial, Comercial e m²">
+                                {services
+                                  .filter((s) => s.category !== 'AUTOMOTIVO')
+                                  .map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                      {s.name} ({formatCurrency(Number(s.default_price))})
+                                    </option>
+                                  ))}
+                              </optgroup>
                             </select>
                           )}
                         </div>

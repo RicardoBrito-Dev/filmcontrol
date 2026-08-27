@@ -4,111 +4,191 @@ import type { ServiceFormData } from '@/schemas/service.schema'
 
 const STORAGE_KEY = 'filmcontrol_services'
 
-const initialSeedServices: ServiceCatalog[] = [
-  // 1. Película Comum (Tintada)
+export const initialSeedServices: ServiceCatalog[] = [
+  // --- AUTOMOTIVO PACOTES ---
   {
-    id: 's_comum',
+    id: 's_comum_auto',
     company_id: 'comp1',
-    name: 'Película Comum (Tintada / Standard)',
+    name: 'Película Comum (Tintada) — Laterais e Traseiro (G5/G20/G35)',
     category: 'AUTOMOTIVO',
-    description: 'Película fumê padrão para escurecimento, privacidade básica e redução de luminosidade.',
-    unit: 'm²',
-    default_price: 70.0,
-    estimated_cost: 20.0,
+    description: 'Aplicação padrão em 4 portas e vidro traseiro para escurecimento e privacidade.',
+    unit: 'veículo',
+    default_price: 250.0,
+    estimated_cost: 60.0,
     estimated_duration_minutes: 60,
     is_active: true,
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-  // 2. Película Poliéster
   {
-    id: 's_poliester',
+    id: 's_poliester_auto',
     company_id: 'comp1',
-    name: 'Película Poliéster Profissional',
+    name: 'Película Poliéster Profissional — Laterais e Traseiro',
     category: 'AUTOMOTIVO',
-    description: 'Película de poliéster de alta durabilidade, proteção UV de 99% e estabilidade de cor (não fica roxa).',
-    unit: 'm²',
-    default_price: 120.0,
-    estimated_cost: 35.0,
+    description: 'Poliéster de alta durabilidade, proteção UV 99%, não desbota nem fica roxa.',
+    unit: 'veículo',
+    default_price: 450.0,
+    estimated_cost: 110.0,
     estimated_duration_minutes: 75,
     is_active: true,
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-  // 3. Película Nano Cerâmica
   {
-    id: 's_ceramica',
+    id: 's_ceramica_auto',
     company_id: 'comp1',
-    name: 'Película Nano Cerâmica Alta Performance',
+    name: 'Película Nano Cerâmica Térmica — Completo (Laterais + Traseiro)',
     category: 'AUTOMOTIVO',
-    description: 'Tecnologia de ponta com até 90% de rejeição de calor infravermelho e máxima proteção térmica.',
-    unit: 'm²',
-    default_price: 250.0,
-    estimated_cost: 75.0,
+    description: 'Alta tecnologia com máxima rejeição de calor infravermelho (até 90%) e conforto térmico.',
+    unit: 'veículo',
+    default_price: 850.0,
+    estimated_cost: 220.0,
     estimated_duration_minutes: 90,
     is_active: true,
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-  // 4. Película Jateada
   {
-    id: 's_jateado',
+    id: 's_parabrisa_ceramica',
     company_id: 'comp1',
-    name: 'Película Jateada (Fosca / Privacidade)',
-    category: 'RESIDENCIAL',
-    description: 'Efeito jateado acetinado para banheiros, portas de vidro, sacadas e divisórias corporativas.',
-    unit: 'm²',
-    default_price: 160.0,
-    estimated_cost: 45.0,
-    estimated_duration_minutes: 60,
-    is_active: true,
-    created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-  },
-  // 5. Película Blackout
-  {
-    id: 's_blackout',
-    company_id: 'comp1',
-    name: 'Película Blackout (Bloqueio Total 100%)',
-    category: 'RESIDENCIAL',
-    description: 'Bloqueio total de passagem de luz e visão completa para quartos, estúdios e fachadas.',
-    unit: 'm²',
-    default_price: 180.0,
-    estimated_cost: 50.0,
-    estimated_duration_minutes: 60,
-    is_active: true,
-    created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-  },
-  // 6. Para-brisa Solar
-  {
-    id: 's_parabrisa',
-    company_id: 'comp1',
-    name: 'Película de Para-brisa Controle Solar 75%',
+    name: 'Para-brisa Nano Cerâmica Térmica (G70 / Transparente Térmico)',
     category: 'AUTOMOTIVO',
-    description: 'Aplicação exclusiva para o para-brisa frontal dentro das normas do CONTRAN.',
+    description: 'Redução drástica do calor frontal sem escurecer a visão noturna (norma CONTRAN).',
     unit: 'un',
-    default_price: 250.0,
-    estimated_cost: 70.0,
+    default_price: 350.0,
+    estimated_cost: 90.0,
     estimated_duration_minutes: 60,
     is_active: true,
-    created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-  // 7. Remoção de Película
+  {
+    id: 's_parabrisa_comum',
+    company_id: 'comp1',
+    name: 'Para-brisa Fumê Solar (G35 / G50 / G70)',
+    category: 'AUTOMOTIVO',
+    description: 'Película fumê para redução de claridade no para-brisa dianteiro.',
+    unit: 'un',
+    default_price: 180.0,
+    estimated_cost: 45.0,
+    estimated_duration_minutes: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 's_antivandalismo',
+    company_id: 'comp1',
+    name: 'Película Antivandalismo / Segurança (PS4 / PS8)',
+    category: 'AUTOMOTIVO',
+    description: 'Película espessa de alta resistência contra quebra de vidros e tentativas de furto.',
+    unit: 'veículo',
+    default_price: 650.0,
+    estimated_cost: 180.0,
+    estimated_duration_minutes: 90,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
   {
     id: 's_remocao',
     company_id: 'comp1',
-    name: 'Remoção de Película Antiga',
+    name: 'Remoção de Película Antiga + Limpeza de Cola',
     category: 'AUTOMOTIVO',
-    description: 'Remoção completa com limpeza técnica de cola e preservação do desembaçador térmico.',
+    description: 'Remoção cuidadosa preservando o desembaçador traseiro e limpando 100% da cola.',
     unit: 'veículo',
     default_price: 120.0,
     estimated_cost: 15.0,
     estimated_duration_minutes: 60,
     is_active: true,
-    created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+
+  // --- RESIDENCIAL / COMERCIAL / POR METRO QUADRADO (m²) ---
+  {
+    id: 's_jateado_m2',
+    company_id: 'comp1',
+    name: 'Película Jateada Fosca (Privacidade Banheiros / Sacadas / Portas)',
+    category: 'RESIDENCIAL',
+    description: 'Efeito acetinado translúcido para privacidade sem perder luminosidade natural.',
+    unit: 'm²',
+    default_price: 160.0,
+    estimated_cost: 45.0,
+    estimated_duration_minutes: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 's_blackout_m2',
+    company_id: 'comp1',
+    name: 'Película Blackout (Bloqueio Total 100% de Luz)',
+    category: 'RESIDENCIAL',
+    description: 'Corte completo de luz e visão para quartos, estúdios, fachadas e vitrines.',
+    unit: 'm²',
+    default_price: 180.0,
+    estimated_cost: 50.0,
+    estimated_duration_minutes: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 's_controle_solar_res',
+    company_id: 'comp1',
+    name: 'Película Fumê Controle Solar Residencial (G5 / G20 / G35)',
+    category: 'RESIDENCIAL',
+    description: 'Redução de calor, brilho excessivo e proteção contra desbotamento de pisos e móveis.',
+    unit: 'm²',
+    default_price: 130.0,
+    estimated_cost: 38.0,
+    estimated_duration_minutes: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 's_espelhada_m2',
+    company_id: 'comp1',
+    name: 'Película Espelhada / Refletiva Prata (Privacidade Diurna)',
+    category: 'RESIDENCIAL',
+    description: 'Efeito espelhado externo para proteção térmica e privacidade diurna.',
+    unit: 'm²',
+    default_price: 150.0,
+    estimated_cost: 42.0,
+    estimated_duration_minutes: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 's_ceramica_m2',
+    company_id: 'comp1',
+    name: 'Película Nano Cerâmica Residencial / Arquitetura por m²',
+    category: 'RESIDENCIAL',
+    description: 'Máxima redução de temperatura para fechamentos de sacada e janelas com sol forte.',
+    unit: 'm²',
+    default_price: 250.0,
+    estimated_cost: 75.0,
+    estimated_duration_minutes: 60,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 's_vitrine_comercial',
+    company_id: 'comp1',
+    name: 'Película para Vitrine Comercial / Proteção UV e Fachadas',
+    category: 'COMERCIAL',
+    description: 'Proteção contra radiação UV para manequins e produtos em exposição em lojas.',
+    unit: 'm²',
+    default_price: 140.0,
+    estimated_cost: 40.0,
+    estimated_duration_minutes: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
 ]
 
@@ -120,7 +200,12 @@ function getLocalServices(): ServiceCatalog[] {
     return initialSeedServices
   }
   try {
-    return JSON.parse(data)
+    const parsed = JSON.parse(data)
+    if (Array.isArray(parsed) && parsed.length >= initialSeedServices.length) {
+      return parsed
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSeedServices))
+    return initialSeedServices
   } catch {
     return initialSeedServices
   }
@@ -142,13 +227,14 @@ export const serviceService = {
         .order('category', { ascending: true })
         .order('name', { ascending: true })
 
-      if (error || !data || data.length === 0) {
-        return getLocalServices()
+      if (!error && data && data.length >= 8) {
+        return data
       }
-      return data
     } catch {
-      return getLocalServices()
+      // Fallback
     }
+
+    return getLocalServices()
   },
 
   async create(data: ServiceFormData): Promise<ServiceCatalog> {
@@ -163,11 +249,17 @@ export const serviceService = {
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.company_id) {
+        let companyId = userProfile?.company_id
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
           const { data: newService, error } = await supabase
             .from('service_catalog')
             .insert({
-              company_id: userProfile.company_id,
+              company_id: companyId,
               name: data.name,
               category: data.category,
               description: data.description || null,
