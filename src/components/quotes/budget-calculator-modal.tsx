@@ -181,29 +181,23 @@ Valor Final: *${formatCurrency(calc.finalPrice)}*`
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              {[
-                { key: 'comum', label: 'Comum (Tintada)' },
-                { key: 'poliester', label: 'Poliéster' },
-                { key: 'nano_ceramica', label: 'Nano Cerâmica' },
-                { key: 'jateado', label: 'Jateado' },
-                { key: 'blackout', label: 'Blackout' },
-              ].map((item) => {
-                const isSelected = selectedFilmKey === item.key
-                const price = pricingConfig[item.key]?.pricePerM2 || 0
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              {Object.entries(pricingConfig).map(([key, item]) => {
+                const isSelected = selectedFilmKey === key
+                const price = item.pricePerM2 || 0
 
                 return (
                   <button
-                    key={item.key}
+                    key={key}
                     type="button"
-                    onClick={() => handleFilmChange(item.key)}
+                    onClick={() => handleFilmChange(key)}
                     className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all ${
                       isSelected
                         ? 'border-primary bg-primary/10 text-primary font-bold shadow-sm ring-2 ring-primary/20'
                         : 'border-border bg-background hover:bg-muted/50 text-foreground'
                     }`}
                   >
-                    <span className="text-xs font-semibold">{item.label}</span>
+                    <span className="text-xs font-semibold line-clamp-1">{item.name}</span>
                     <span className="text-[11px] font-mono text-muted-foreground mt-0.5">
                       {formatCurrency(price)}/m²
                     </span>
