@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { MobileNav } from '@/components/layout/mobile-nav'
+import { BottomNav } from '@/components/layout/bottom-nav'
 
 export default function DashboardLayout({
   children,
@@ -23,7 +24,7 @@ export default function DashboardLayout({
         />
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Drawer */}
       <MobileNav
         open={mobileNavOpen}
         onClose={() => setMobileNavOpen(false)}
@@ -36,10 +37,13 @@ export default function DashboardLayout({
           userName="Admin"
           userEmail="admin@filmcontrol.com"
         />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6">{children}</div>
+        <main className="flex-1 overflow-y-auto pb-20 md:pb-6">
+          <div className="p-3.5 sm:p-6 max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomNav onOpenMenu={() => setMobileNavOpen(true)} />
     </div>
   )
 }
