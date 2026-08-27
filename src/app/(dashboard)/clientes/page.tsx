@@ -1,13 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, UserPlus, MapPin, Car, DollarSign } from 'lucide-react'
+import { Users, Plus, MapPin, Car, DollarSign } from 'lucide-react'
 import { CustomerTable } from '@/components/customers/customer-table'
 import { CustomerFormModal } from '@/components/customers/customer-form-modal'
 import { VehicleFormModal } from '@/components/vehicles/vehicle-form-modal'
 import { customerService, type CustomerWithRelations } from '@/services/customer.service'
-import type { VehicleWithCustomer } from '@/services/vehicle.service'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { formatCurrency } from '@/lib/utils'
 import { toast } from '@/hooks/use-toast'
 
@@ -76,20 +76,27 @@ export default function ClientesPage() {
 
   // Quick stats
   const totalSpentAll = customers.reduce((acc, c) => acc + (c.total_spent || 0), 0)
-  const residentialClientsCount = customers.filter(
-    (c) => c.address && (c.notes?.toLowerCase().includes('resid') || c.address_complement?.toLowerCase().includes('apto') || c.address_complement?.toLowerCase().includes('casa'))
+  const automotiveCount = customers.filter((c) => (c.vehicles?.length || 0) > 0).length
+  const residentialCount = customers.filter(
+    (c) => !!c.address && (c.vehicles?.length || 0) === 0
   ).length
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Gestão de Clientes
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Cadastre clientes, controle endereços residenciais/comerciais e frotas de veículos.
-        </p>
+      {/* Header com botão Novo Cliente visível */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Gestão de Clientes
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Cadastro prático com distinção clara entre atendimento <strong>Automotivo</strong> e <strong>Residencial / Comercial</strong>.
+          </p>
+        </div>
+
+        <Button onClick={handleAddNew} className="gap-1.5 font-bold shadow-sm">
+          <Plus className="h-4 w-4" /> Novo Cliente
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -110,6 +117,36 @@ export default function ClientesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">
+              Clientes Automotivos
+            </CardTitle>
+            <Car className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {automotiveCount}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Veículos cadastrados</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">
+              Clientes Residenciais
+            </CardTitle>
+            <MapPin className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {residentialCount || customers.filter((c) => !!c.address).length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Imóveis e sacadas</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">
               Total Faturado
             </CardTitle>
             <DollarSign className="h-4 w-4 text-emerald-500" />
@@ -119,38 +156,6 @@ export default function ClientesPage() {
               {formatCurrency(totalSpentAll)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Serviços executados</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">
-              Endereços Cadastrados
-            </CardTitle>
-            <MapPin className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {customers.filter((c) => !!c.address).length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Atendimento no local</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-semibold uppercase text-muted-foreground">
-              Ticket Médio
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {customers.length > 0
-                ? formatCurrency(totalSpentAll / customers.length)
-                : 'R$ 0,00'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Por cliente</p>
           </CardContent>
         </Card>
       </div>

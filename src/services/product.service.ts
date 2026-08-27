@@ -3,112 +3,15 @@ import type { Product, InventoryMovement } from '@/types/database.types'
 import type { ProductFormData, InventoryMovementFormData } from '@/schemas/product.schema'
 
 const STORAGE_KEY_PRODUCTS = 'filmcontrol_products'
-const STORAGE_KEY_MOVEMENTS = 'filmcontrol_movements'
-
-const initialSeedProducts: Product[] = [
-  {
-    id: 'p1',
-    company_id: 'comp1',
-    name: 'Película G5 Premium 1.52m (Rolo 30m)',
-    category: 'Película Automotiva',
-    brand: 'Insulfilm Pro',
-    unit: 'm',
-    quantity: 45.0,
-    min_quantity: 15.0,
-    cost: 18.0,
-    supplier: 'Distribuidora São Paulo',
-    notes: 'Rolo principal para laterais e traseiro.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
-    id: 'p2',
-    company_id: 'comp1',
-    name: 'Película Nano Cerâmica IR90 1.52m',
-    category: 'Película Premium',
-    brand: '3M Crystalline',
-    unit: 'm',
-    quantity: 18.5,
-    min_quantity: 8.0,
-    cost: 65.0,
-    supplier: 'Distribuidora 3M Brasil',
-    notes: 'Alta rejeição térmica, produto de alto valor agregado.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
-    id: 'p3',
-    company_id: 'comp1',
-    name: 'Película Jateada Privacidade 1.20m',
-    category: 'Película Arquitetura / Residencial',
-    brand: 'Avery Dennison',
-    unit: 'm',
-    quantity: 28.0,
-    min_quantity: 10.0,
-    cost: 22.0,
-    supplier: 'Suprimentos Glass',
-    notes: 'Para banheiros, sacadas e divisórias residenciais.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
-    id: 'p4',
-    company_id: 'comp1',
-    name: 'Película Carbon 70% 1.52m',
-    category: 'Película Automotiva',
-    brand: 'Llumar',
-    unit: 'm',
-    quantity: 6.0,
-    min_quantity: 10.0, // Alerta de estoque baixo!
-    cost: 38.0,
-    supplier: 'Llumar Imports',
-    notes: 'Estoque baixo - solicitar reposição com fornecedor.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
-    id: 'p5',
-    company_id: 'comp1',
-    name: 'Solução Concentrada de Aplicação 1L',
-    category: 'Insumos & Ferramentas',
-    brand: 'FilmCleaner',
-    unit: 'un',
-    quantity: 14.0,
-    min_quantity: 5.0,
-    cost: 15.0,
-    supplier: 'Distribuidora São Paulo',
-    notes: 'Rende até 50 litros de solução diluída.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
-    id: 'p6',
-    company_id: 'comp1',
-    name: 'Espátula Squeegee com Feltro Profissional',
-    category: 'Insumos & Ferramentas',
-    brand: 'ProTools',
-    unit: 'un',
-    quantity: 4.0,
-    min_quantity: 5.0, // Estoque baixo
-    cost: 25.0,
-    supplier: 'Ferramentas Brasil',
-    notes: 'Espátula para acabamento sem riscar películas.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-]
 
 function getLocalProducts(): Product[] {
-  if (typeof window === 'undefined') return initialSeedProducts
+  if (typeof window === 'undefined') return []
   const data = localStorage.getItem(STORAGE_KEY_PRODUCTS)
-  if (!data) {
-    localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(initialSeedProducts))
-    return initialSeedProducts
-  }
+  if (!data) return []
   try {
     return JSON.parse(data)
   } catch {
-    return initialSeedProducts
+    return []
   }
 }
 
@@ -127,13 +30,14 @@ export const productService = {
         .select('*')
         .order('name', { ascending: true })
 
-      if (error || !data || data.length === 0) {
-        return getLocalProducts()
+      if (!error && data) {
+        return data
       }
-      return data
     } catch {
-      return getLocalProducts()
+      // Fallback
     }
+
+    return getLocalProducts()
   },
 
   async create(data: ProductFormData): Promise<Product> {
@@ -148,11 +52,17 @@ export const productService = {
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.company_id) {
+        let companyId = userProfile?.company_id
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
           const { data: newProd, error } = await supabase
             .from('products')
             .insert({
-              company_id: userProfile.company_id,
+              company_id: companyId,
               name: data.name,
               category: data.category || null,
               brand: data.brand || null,

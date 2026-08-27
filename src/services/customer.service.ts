@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client'
-import type { Customer, Vehicle, Quote, WorkOrder } from '@/types/database.types'
+import type { Customer, Vehicle, Quote, WorkOrder, VehicleType } from '@/types/database.types'
 import type { CustomerFormData } from '@/schemas/customer.schema'
+import { vehicleService } from '@/services/vehicle.service'
 
 export interface CustomerWithRelations extends Customer {
   vehicles?: Vehicle[]
@@ -11,111 +12,26 @@ export interface CustomerWithRelations extends Customer {
   last_service_date?: string | null
 }
 
+export interface QuickVehicleInput {
+  brand: string
+  model: string
+  year?: number | null
+  color?: string | null
+  plate?: string | null
+  type?: VehicleType
+  notes?: string | null
+}
+
 const STORAGE_KEY = 'filmcontrol_customers'
 
-// Seed customers fallback for immediate preview
-const initialSeedCustomers: CustomerWithRelations[] = [
-  {
-    id: 'c1',
-    company_id: 'comp1',
-    name: 'João Silva',
-    document: '123.456.789-00',
-    phone: '(11) 3456-7890',
-    whatsapp: '(11) 99999-1111',
-    email: 'joao.silva@email.com',
-    zip_code: '05432-000',
-    address: 'Rua Harmonia',
-    address_number: '120',
-    address_complement: 'Apto 42',
-    neighborhood: 'Vila Madalena',
-    city: 'São Paulo',
-    state: 'SP',
-    notes: 'Cliente exigente, prefere película Nano Cerâmica no carro e fumê controle solar na sacada do apartamento.',
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    total_spent: 1850.0,
-    services_count: 2,
-    last_service_date: new Date(Date.now() - 10 * 86400000).toISOString(),
-  },
-  {
-    id: 'c2',
-    company_id: 'comp1',
-    name: 'Pedro Henrique Souza',
-    document: '234.567.890-11',
-    phone: '(11) 2345-6789',
-    whatsapp: '(11) 98888-2222',
-    email: 'pedro.souza@email.com',
-    zip_code: '04538-133',
-    address: 'Av. Moema',
-    address_number: '740',
-    address_complement: 'Bloco B',
-    neighborhood: 'Moema',
-    city: 'São Paulo',
-    state: 'SP',
-    notes: 'Solicitou orçamento residencial para janela da sala + película G5 no Civic.',
-    created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 25 * 86400000).toISOString(),
-    total_spent: 1200.0,
-    services_count: 1,
-    last_service_date: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'c3',
-    company_id: 'comp1',
-    name: 'Maria Clara Santos',
-    document: '345.678.901-22',
-    phone: '(11) 97777-3333',
-    whatsapp: '(11) 97777-3333',
-    email: 'maria.clara@email.com',
-    zip_code: '01426-001',
-    address: 'Alameda Lorena',
-    address_number: '550',
-    address_complement: 'Casa',
-    neighborhood: 'Jardins',
-    city: 'São Paulo',
-    state: 'SP',
-    notes: 'Aplicação residencial de película jateada de privacidade nos banheiros e varanda gourmet.',
-    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-    total_spent: 2400.0,
-    services_count: 2,
-    last_service_date: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: 'c4',
-    company_id: 'comp1',
-    name: 'Carlos Eduardo Oliveira',
-    document: '456.789.012-33',
-    phone: '(11) 96666-4444',
-    whatsapp: '(11) 96666-4444',
-    email: 'carlos.oliveira@empresa.com.br',
-    zip_code: '07010-000',
-    address: 'Rua Dom Pedro II',
-    address_number: '88',
-    address_complement: 'Sala 302',
-    neighborhood: 'Centro',
-    city: 'Guarulhos',
-    state: 'SP',
-    notes: 'Aplicação comercial de controle solar na fachada do escritório + película na Ford Ranger.',
-    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-    total_spent: 3100.0,
-    services_count: 3,
-    last_service_date: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-]
-
 function getLocalCustomers(): CustomerWithRelations[] {
-  if (typeof window === 'undefined') return initialSeedCustomers
+  if (typeof window === 'undefined') return []
   const data = localStorage.getItem(STORAGE_KEY)
-  if (!data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSeedCustomers))
-    return initialSeedCustomers
-  }
+  if (!data) return []
   try {
     return JSON.parse(data)
   } catch {
-    return initialSeedCustomers
+    return []
   }
 }
 
@@ -137,18 +53,18 @@ export const customerService = {
         `)
         .order('created_at', { ascending: false })
 
-      if (error || !data || data.length === 0) {
-        return getLocalCustomers()
+      if (!error && data) {
+        return data.map((c) => ({
+          ...c,
+          total_spent: 0,
+          services_count: c.vehicles?.length || 0,
+        }))
       }
-
-      return data.map((c) => ({
-        ...c,
-        total_spent: 0,
-        services_count: c.vehicles?.length || 0,
-      }))
     } catch {
-      return getLocalCustomers()
+      // Fallback
     }
+
+    return getLocalCustomers()
   },
 
   async getById(id: string): Promise<CustomerWithRelations | null> {
@@ -185,14 +101,13 @@ export const customerService = {
     return found || null
   },
 
-  async create(data: CustomerFormData): Promise<CustomerWithRelations> {
+  async create(data: CustomerFormData, vehicleInput?: QuickVehicleInput | null): Promise<CustomerWithRelations> {
     try {
       const supabase = createClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      // Try Supabase insert
       if (user) {
         const { data: userProfile } = await supabase
           .from('users')
@@ -200,11 +115,18 @@ export const customerService = {
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.company_id) {
+        let companyId = userProfile?.company_id
+
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
           const { data: newCustomer, error } = await supabase
             .from('customers')
             .insert({
-              company_id: userProfile.company_id,
+              company_id: companyId,
               name: data.name,
               document: data.document || null,
               phone: data.phone || null,
@@ -223,7 +145,23 @@ export const customerService = {
             .single()
 
           if (!error && newCustomer) {
-            return newCustomer
+            const customerObj: CustomerWithRelations = { ...newCustomer, vehicles: [] }
+
+            if (vehicleInput?.brand && vehicleInput?.model) {
+              const createdVeh = await vehicleService.create({
+                customer_id: newCustomer.id,
+                brand: vehicleInput.brand,
+                model: vehicleInput.model,
+                year: vehicleInput.year || null,
+                color: vehicleInput.color || null,
+                plate: vehicleInput.plate || null,
+                type: vehicleInput.type || 'CARRO',
+                notes: vehicleInput.notes || null,
+              })
+              customerObj.vehicles = [createdVeh]
+            }
+
+            return customerObj
           }
         }
       }
@@ -232,8 +170,9 @@ export const customerService = {
     }
 
     // Local fallback
-    const newCustomer: CustomerWithRelations = {
-      id: 'c_' + Date.now(),
+    const newCustId = 'c_' + Date.now()
+    const createdCustomer: CustomerWithRelations = {
+      id: newCustId,
       company_id: 'comp1',
       name: data.name,
       document: data.document || null,
@@ -255,9 +194,23 @@ export const customerService = {
       services_count: 0,
     }
 
+    if (vehicleInput?.brand && vehicleInput?.model) {
+      const createdVeh = await vehicleService.create({
+        customer_id: newCustId,
+        brand: vehicleInput.brand,
+        model: vehicleInput.model,
+        year: vehicleInput.year || null,
+        color: vehicleInput.color || null,
+        plate: vehicleInput.plate || null,
+        type: vehicleInput.type || 'CARRO',
+        notes: vehicleInput.notes || null,
+      })
+      createdCustomer.vehicles = [createdVeh]
+    }
+
     const currentList = getLocalCustomers()
-    saveLocalCustomers([newCustomer, ...currentList])
-    return newCustomer
+    saveLocalCustomers([createdCustomer, ...currentList])
+    return createdCustomer
   },
 
   async update(id: string, data: Partial<CustomerFormData>): Promise<CustomerWithRelations> {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2, Search, MapPin, Building, Phone, User, FileText } from 'lucide-react'
+import { Loader2, MapPin, User, Car, Building2, Check, Sparkles } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { customerSchema, type CustomerFormData } from '@/schemas/customer.schema'
-import { customerService, type CustomerWithRelations } from '@/services/customer.service'
+import { customerService, type CustomerWithRelations, type QuickVehicleInput } from '@/services/customer.service'
+import type { VehicleType } from '@/types/database.types'
 import { toast } from '@/hooks/use-toast'
 
 interface CustomerFormModalProps {
@@ -26,6 +27,25 @@ interface CustomerFormModalProps {
   onSuccess: (customer: CustomerWithRelations) => void
 }
 
+const commonBrands = [
+  'Chevrolet',
+  'Volkswagen',
+  'Fiat',
+  'Toyota',
+  'Honda',
+  'Hyundai',
+  'Jeep',
+  'Ford',
+  'Renault',
+  'Nissan',
+  'BMW',
+  'Mercedes-Benz',
+  'Audi',
+  'BYD',
+  'GWM',
+  'Outra',
+]
+
 export function CustomerFormModal({
   open,
   onOpenChange,
@@ -34,6 +54,17 @@ export function CustomerFormModal({
 }: CustomerFormModalProps) {
   const [loading, setLoading] = useState(false)
   const [searchingCep, setSearchingCep] = useState(false)
+
+  // Tipo de Atendimento: 'AUTOMOTIVO' | 'RESIDENCIAL'
+  const [serviceType, setServiceType] = useState<'AUTOMOTIVO' | 'RESIDENCIAL'>('AUTOMOTIVO')
+
+  // Veículo Express
+  const [vBrand, setVBrand] = useState('')
+  const [vModel, setVModel] = useState('')
+  const [vPlate, setVPlate] = useState('')
+  const [vColor, setVColor] = useState('')
+  const [vYear, setVYear] = useState('')
+  const [vType, setVType] = useState<VehicleType>('CARRO')
 
   const {
     register,
@@ -77,6 +108,11 @@ export function CustomerFormModal({
         state: customerToEdit.state || '',
         notes: customerToEdit.notes || '',
       })
+      if (customerToEdit.vehicles && customerToEdit.vehicles.length > 0) {
+        setServiceType('AUTOMOTIVO')
+      } else if (customerToEdit.address) {
+        setServiceType('RESIDENCIAL')
+      }
     } else {
       reset({
         name: '',
@@ -93,10 +129,17 @@ export function CustomerFormModal({
         state: '',
         notes: '',
       })
+      setServiceType('AUTOMOTIVO')
+      setVBrand('')
+      setVModel('')
+      setVPlate('')
+      setVColor('')
+      setVYear('')
+      setVType('CARRO')
     }
   }, [customerToEdit, reset, open])
 
-  // ViaCEP integration for automatic address completion
+  // ViaCEP integration
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const rawCep = e.target.value.replace(/\D/g, '')
     if (rawCep.length === 8) {
@@ -113,15 +156,9 @@ export function CustomerFormModal({
             title: 'Endereço encontrado!',
             description: `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`,
           })
-        } else {
-          toast({
-            title: 'CEP não localizado',
-            description: 'Preencha o endereço manualmente.',
-            variant: 'destructive',
-          })
         }
       } catch {
-        // Silently ignore or alert
+        // Silently continue
       } finally {
         setSearchingCep(false)
       }
@@ -135,15 +172,32 @@ export function CustomerFormModal({
         const updated = await customerService.update(customerToEdit.id, data)
         toast({
           title: 'Cliente atualizado!',
-          description: `Os dados de ${updated.name} foram salvos com sucesso.`,
+          description: `Os dados de ${updated.name} foram salvos.`,
           variant: 'success' as 'default',
         })
         onSuccess(updated)
       } else {
-        const created = await customerService.create(data)
+        const vehiclePayload: QuickVehicleInput | null =
+          serviceType === 'AUTOMOTIVO' && vBrand.trim() && vModel.trim()
+            ? {
+                brand: vBrand.trim(),
+                model: vModel.trim(),
+                plate: vPlate.trim() ? vPlate.trim().toUpperCase() : null,
+                color: vColor.trim() || null,
+                year: vYear ? Number(vYear) : null,
+                type: vType,
+              }
+            : null
+
+        const created = await customerService.create(data, vehiclePayload)
+
         toast({
-          title: 'Cliente cadastrado!',
-          description: `${created.name} foi adicionado à sua base.`,
+          title: vehiclePayload
+            ? 'Cliente e Veículo cadastrados!'
+            : 'Cliente cadastrado com sucesso!',
+          description: vehiclePayload
+            ? `${created.name} e o veículo ${vBrand} ${vModel} foram cadastrados juntos.`
+            : `${created.name} foi cadastrado para atendimento residencial/comercial.`,
           variant: 'success' as 'default',
         })
         onSuccess(created)
@@ -163,193 +217,328 @@ export function CustomerFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-xl">
             <User className="h-5 w-5 text-primary" />
             {customerToEdit ? 'Editar Cliente' : 'Novo Cliente'}
           </DialogTitle>
           <DialogDescription>
-            Preencha os dados do cliente e endereço para atendimento automotivo, residencial ou comercial.
+            Escolha o tipo de atendimento para preencher apenas o que interessa de forma ultra-rápida.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Seção 1: Dados Pessoais / Contato */}
-          <div className="space-y-4">
-            <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground border-b pb-2">
-              <User className="h-4 w-4 text-primary" /> Dados Principais
-            </h4>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Seletor Segmentado: Automotivo vs Residencial */}
+          {!customerToEdit && (
+            <div className="grid grid-cols-2 gap-2 p-1.5 bg-muted/60 rounded-xl border">
+              <button
+                type="button"
+                onClick={() => setServiceType('AUTOMOTIVO')}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                  serviceType === 'AUTOMOTIVO'
+                    ? 'bg-card text-primary shadow-sm border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Car className="h-4 w-4 text-primary" />
+                <span>🚗 Automotivo (Veículo)</span>
+              </button>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="name">
-                  Nome Completo / Razão Social <span className="text-destructive">*</span>
+              <button
+                type="button"
+                onClick={() => setServiceType('RESIDENCIAL')}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition-all ${
+                  serviceType === 'RESIDENCIAL'
+                    ? 'bg-card text-blue-600 dark:text-blue-400 shadow-sm border border-blue-500/20'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Building2 className="h-4 w-4 text-blue-500" />
+                <span>🏠 Residencial / Comercial</span>
+              </button>
+            </div>
+          )}
+
+          {/* Dados Principais do Cliente */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b pb-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-primary" /> Dados do Cliente
+              </span>
+              <span className="text-[11px] text-muted-foreground">* Obrigatórios</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1 sm:col-span-2">
+                <Label htmlFor="name" className="text-xs font-semibold">
+                  Nome Completo / Razão Social *
                 </Label>
                 <Input
                   id="name"
                   placeholder="Ex: João da Silva / Loja XYZ"
                   {...register('name')}
-                  className={errors.name ? 'border-destructive' : ''}
+                  className={`h-9 text-sm ${errors.name ? 'border-destructive' : ''}`}
                 />
                 {errors.name && (
                   <p className="text-xs text-destructive">{errors.name.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="document">CPF ou CNPJ</Label>
-                <Input
-                  id="document"
-                  placeholder="000.000.000-00"
-                  {...register('document')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp">
-                  WhatsApp Principal <span className="text-destructive">*</span>
+              <div className="space-y-1">
+                <Label htmlFor="whatsapp" className="text-xs font-semibold">
+                  WhatsApp Principal *
                 </Label>
                 <Input
                   id="whatsapp"
                   placeholder="(11) 99999-9999"
                   {...register('whatsapp')}
-                  className={errors.whatsapp ? 'border-destructive' : ''}
+                  className={`h-9 text-sm ${errors.whatsapp ? 'border-destructive' : ''}`}
                 />
                 {errors.whatsapp && (
                   <p className="text-xs text-destructive">{errors.whatsapp.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone Secundário</Label>
+              <div className="space-y-1">
+                <Label htmlFor="document" className="text-xs font-semibold">
+                  CPF ou CNPJ (Opcional)
+                </Label>
                 <Input
-                  id="phone"
-                  placeholder="(11) 3333-3333"
-                  {...register('phone')}
+                  id="document"
+                  placeholder="000.000.000-00"
+                  {...register('document')}
+                  className="h-9 text-sm"
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="cliente@email.com"
-                  {...register('email')}
-                  className={errors.email ? 'border-destructive' : ''}
-                />
-                {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email.message}</p>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Seção 2: Endereço para Aplicação Residencial / Comercial */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <MapPin className="h-4 w-4 text-primary" /> Endereço de Instalação (Residencial / Comercial)
-              </h4>
-              <span className="text-xs text-muted-foreground">Busca rápida por CEP</span>
-            </div>
+          {/* Se AUTOMOTIVO: Exibe Campos do Veículo Diretamente */}
+          {serviceType === 'AUTOMOTIVO' && !customerToEdit && (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-primary/10 pb-1.5">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Car className="h-4 w-4 text-primary" /> Dados do Veículo (Cadastrado Junto)
+                </span>
+                <span className="text-[10px] bg-primary/15 text-primary font-mono px-2 py-0.5 rounded-full font-semibold">
+                  1-Click
+                </span>
+              </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="zip_code">CEP</Label>
-                <div className="relative">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label htmlFor="vBrand" className="text-xs font-semibold">
+                    Marca *
+                  </Label>
                   <Input
-                    id="zip_code"
-                    placeholder="00000-000"
-                    {...register('zip_code')}
-                    onBlur={handleCepBlur}
+                    id="vBrand"
+                    list="brand-suggestions"
+                    placeholder="Ex: Honda, Toyota"
+                    value={vBrand}
+                    onChange={(e) => setVBrand(e.target.value)}
+                    className="h-9 text-sm bg-background"
                   />
-                  {searchingCep && (
-                    <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
-                  )}
+                  <datalist id="brand-suggestions">
+                    {commonBrands.map((b) => (
+                      <option key={b} value={b} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vModel" className="text-xs font-semibold">
+                    Modelo *
+                  </Label>
+                  <Input
+                    id="vModel"
+                    placeholder="Ex: Civic, Corolla"
+                    value={vModel}
+                    onChange={(e) => setVModel(e.target.value)}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vPlate" className="text-xs font-semibold">
+                    Placa
+                  </Label>
+                  <Input
+                    id="vPlate"
+                    placeholder="Ex: BRA-2E19"
+                    value={vPlate}
+                    onChange={(e) => setVPlate(e.target.value.toUpperCase())}
+                    className="h-9 text-sm bg-background font-mono uppercase"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vColor" className="text-xs font-semibold">
+                    Cor
+                  </Label>
+                  <Input
+                    id="vColor"
+                    placeholder="Ex: Preto, Prata"
+                    value={vColor}
+                    onChange={(e) => setVColor(e.target.value)}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vYear" className="text-xs font-semibold">
+                    Ano
+                  </Label>
+                  <Input
+                    id="vYear"
+                    type="number"
+                    placeholder="Ex: 2023"
+                    value={vYear}
+                    onChange={(e) => setVYear(e.target.value)}
+                    className="h-9 text-sm bg-background font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="vType" className="text-xs font-semibold">
+                    Categoria
+                  </Label>
+                  <select
+                    id="vType"
+                    value={vType}
+                    onChange={(e) => setVType(e.target.value as VehicleType)}
+                    className="h-9 w-full rounded-lg border bg-background px-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="CARRO">Carro / Sedan / Hatch</option>
+                    <option value="SUV">SUV / Crossover</option>
+                    <option value="PICKUP">Pickup / Caminhonete</option>
+                    <option value="MOTO">Moto</option>
+                    <option value="CAMINHAO">Caminhão / Van</option>
+                    <option value="OUTRO">Outro</option>
+                  </select>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address">Rua / Avenida</Label>
-                <Input
-                  id="address"
-                  placeholder="Ex: Rua Harmonia"
-                  {...register('address')}
-                />
+          {/* Se RESIDENCIAL ou Editando: Exibe Campos de Endereço */}
+          {(serviceType === 'RESIDENCIAL' || customerToEdit) && (
+            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3.5 space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between border-b border-blue-500/10 pb-1.5">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-blue-500" /> Endereço do Imóvel (Para Aplicação no Local)
+                </span>
+                <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                  Busca por CEP
+                </span>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address_number">Número</Label>
-                <Input
-                  id="address_number"
-                  placeholder="Ex: 120"
-                  {...register('address_number')}
-                />
-              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label htmlFor="zip_code" className="text-xs font-semibold">
+                    CEP
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="zip_code"
+                      placeholder="00000-000"
+                      {...register('zip_code')}
+                      onBlur={handleCepBlur}
+                      className="h-9 text-sm font-mono bg-background"
+                    />
+                    {searchingCep && (
+                      <Loader2 className="absolute right-2.5 top-2.5 h-4 w-4 animate-spin text-primary" />
+                    )}
+                  </div>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address_complement">Complemento</Label>
-                <Input
-                  id="address_complement"
-                  placeholder="Apto 42, Bloco B, Casa..."
-                  {...register('address_complement')}
-                />
-              </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <Label htmlFor="address" className="text-xs font-semibold">
+                    Rua / Avenida
+                  </Label>
+                  <Input
+                    id="address"
+                    placeholder="Ex: Alameda Lorena"
+                    {...register('address')}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="neighborhood">Bairro</Label>
-                <Input
-                  id="neighborhood"
-                  placeholder="Ex: Vila Madalena"
-                  {...register('neighborhood')}
-                />
-              </div>
+                <div className="space-y-1">
+                  <Label htmlFor="address_number" className="text-xs font-semibold">
+                    Número
+                  </Label>
+                  <Input
+                    id="address_number"
+                    placeholder="Ex: 550"
+                    {...register('address_number')}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
 
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="city">Cidade</Label>
-                <Input
-                  id="city"
-                  placeholder="Ex: São Paulo"
-                  {...register('city')}
-                />
-              </div>
+                <div className="space-y-1">
+                  <Label htmlFor="address_complement" className="text-xs font-semibold">
+                    Complemento
+                  </Label>
+                  <Input
+                    id="address_complement"
+                    placeholder="Casa, Apto 42, Sacada..."
+                    {...register('address_complement')}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="state">Estado (UF)</Label>
-                <Input
-                  id="state"
-                  placeholder="SP"
-                  maxLength={2}
-                  {...register('state')}
-                />
+                <div className="space-y-1">
+                  <Label htmlFor="neighborhood" className="text-xs font-semibold">
+                    Bairro
+                  </Label>
+                  <Input
+                    id="neighborhood"
+                    placeholder="Ex: Jardins"
+                    {...register('neighborhood')}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
+
+                <div className="space-y-1 sm:col-span-2">
+                  <Label htmlFor="city" className="text-xs font-semibold">
+                    Cidade
+                  </Label>
+                  <Input
+                    id="city"
+                    placeholder="Ex: São Paulo"
+                    {...register('city')}
+                    className="h-9 text-sm bg-background"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="state" className="text-xs font-semibold">
+                    UF
+                  </Label>
+                  <Input
+                    id="state"
+                    placeholder="SP"
+                    maxLength={2}
+                    {...register('state')}
+                    className="h-9 text-sm uppercase bg-background"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Seção 3: Observações */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Observações / Preferências</Label>
-            <textarea
-              id="notes"
-              rows={3}
-              placeholder="Ex: Cliente tem cachorro grande na residência; prefere película com alta rejeição de calor na sala de estar..."
-              {...register('notes')}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="h-9"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="h-9 gap-1.5 font-bold">
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -358,7 +547,9 @@ export function CustomerFormModal({
               ) : customerToEdit ? (
                 'Salvar Alterações'
               ) : (
-                'Cadastrar Cliente'
+                <>
+                  <Check className="h-4 w-4" /> Cadastrar Cliente
+                </>
               )}
             </Button>
           </DialogFooter>

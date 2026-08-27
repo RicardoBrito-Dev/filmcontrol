@@ -20,183 +20,14 @@ export interface WorkOrderWithRelations extends WorkOrder {
 
 const STORAGE_KEY = 'filmcontrol_work_orders'
 
-const initialSeedWorkOrders: WorkOrderWithRelations[] = [
-  {
-    id: 'wo1',
-    company_id: 'comp1',
-    number: 'OS-2024-5921',
-    quote_id: 'q1',
-    customer_id: 'c1',
-    vehicle_id: 'v1',
-    installer_id: 'u1',
-    status: 'CONCLUIDO',
-    notes: 'Aplicação perfeita de película G5 em todos os vidros.',
-    total: 550.0,
-    payment_status: 'PAGO',
-    scheduled_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    completed_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    customer: {
-      id: 'c1',
-      company_id: 'comp1',
-      name: 'João Silva',
-      document: '123.456.789-00',
-      phone: '(11) 3456-7890',
-      whatsapp: '(11) 99999-1111',
-      email: 'joao.silva@email.com',
-      zip_code: '05432-000',
-      address: 'Rua Harmonia',
-      address_number: '120',
-      address_complement: 'Apto 42',
-      neighborhood: 'Vila Madalena',
-      city: 'São Paulo',
-      state: 'SP',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    vehicle: {
-      id: 'v1',
-      company_id: 'comp1',
-      customer_id: 'c1',
-      brand: 'Chevrolet',
-      model: 'Onix Plus Premier',
-      year: 2023,
-      color: 'Prata Shark',
-      plate: 'BRA-2E19',
-      type: 'CARRO',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    items: [
-      {
-        id: 'woi1',
-        work_order_id: 'wo1',
-        service_id: 's_comum',
-        product_id: null,
-        description: 'Película G5 Laterais e Traseiro',
-        quantity: 1,
-        unit_price: 350.0,
-        subtotal: 350.0,
-      },
-      {
-        id: 'woi2',
-        work_order_id: 'wo1',
-        service_id: 's_parabrisa',
-        product_id: null,
-        description: 'Película Para-brisa Solar 75%',
-        quantity: 1,
-        unit_price: 200.0,
-        subtotal: 200.0,
-      },
-    ],
-    files: [
-      {
-        id: 'f1',
-        company_id: 'comp1',
-        work_order_id: 'wo1',
-        customer_id: 'c1',
-        file_type: 'ANTES',
-        url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80',
-        storage_path: 'wo1/antes-1.jpg',
-        name: 'Vidros originais sem película',
-        size_bytes: 120400,
-        created_by: 'u1',
-        created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-      },
-      {
-        id: 'f2',
-        company_id: 'comp1',
-        work_order_id: 'wo1',
-        customer_id: 'c1',
-        file_type: 'DEPOIS',
-        url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
-        storage_path: 'wo1/depois-1.jpg',
-        name: 'Película G5 instalada com acabamento impecável',
-        size_bytes: 145200,
-        created_by: 'u1',
-        created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-      },
-    ],
-  },
-  {
-    id: 'wo2',
-    company_id: 'comp1',
-    number: 'OS-2024-5922',
-    quote_id: null,
-    customer_id: 'c2',
-    vehicle_id: 'v3',
-    installer_id: 'u1',
-    status: 'EM_INSTALACAO',
-    notes: 'Honda Civic Touring — Nano Cerâmica em andamento.',
-    total: 850.0,
-    payment_status: 'PARCIAL',
-    scheduled_at: new Date().toISOString(),
-    completed_at: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    customer: {
-      id: 'c2',
-      company_id: 'comp1',
-      name: 'Pedro Henrique Souza',
-      document: '234.567.890-11',
-      phone: null,
-      whatsapp: '(11) 98888-2222',
-      email: 'pedro.souza@email.com',
-      zip_code: '04538-133',
-      address: 'Av. Moema',
-      address_number: '740',
-      address_complement: 'Bloco B',
-      neighborhood: 'Moema',
-      city: 'São Paulo',
-      state: 'SP',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    vehicle: {
-      id: 'v3',
-      company_id: 'comp1',
-      customer_id: 'c2',
-      brand: 'Honda',
-      model: 'Civic Touring',
-      year: 2022,
-      color: 'Preto Cristal',
-      plate: 'CIV-9H88',
-      type: 'CARRO',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    items: [
-      {
-        id: 'woi3',
-        work_order_id: 'wo2',
-        service_id: 's_ceramica',
-        product_id: null,
-        description: 'Película Nano Cerâmica Alta Performance',
-        quantity: 1,
-        unit_price: 850.0,
-        subtotal: 850.0,
-      },
-    ],
-    files: [],
-  },
-]
-
 function getLocalWorkOrders(): WorkOrderWithRelations[] {
-  if (typeof window === 'undefined') return initialSeedWorkOrders
+  if (typeof window === 'undefined') return []
   const data = localStorage.getItem(STORAGE_KEY)
-  if (!data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSeedWorkOrders))
-    return initialSeedWorkOrders
-  }
+  if (!data) return []
   try {
     return JSON.parse(data)
   } catch {
-    return initialSeedWorkOrders
+    return []
   }
 }
 
@@ -221,20 +52,17 @@ export const workOrderService = {
         `)
         .order('created_at', { ascending: false })
 
-      if (error || !data || data.length === 0) {
-        return getLocalWorkOrders()
+      if (!error && data) {
+        return data
       }
-      return data
     } catch {
-      return getLocalWorkOrders()
+      // Fallback
     }
+
+    return getLocalWorkOrders()
   },
 
   async getById(id: string): Promise<WorkOrderWithRelations | null> {
-    const localList = getLocalWorkOrders()
-    const found = localList.find((w) => w.id === id)
-    if (found) return found
-
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -254,7 +82,9 @@ export const workOrderService = {
       // Fallback
     }
 
-    return null
+    const localList = getLocalWorkOrders()
+    const found = localList.find((w) => w.id === id)
+    return found || null
   },
 
   async create(data: WorkOrderFormData, customer?: Customer, vehicle?: Vehicle | null): Promise<WorkOrderWithRelations> {
@@ -268,7 +98,7 @@ export const workOrderService = {
       quote_id: data.quote_id || null,
       customer_id: data.customer_id,
       vehicle_id: data.vehicle_id || null,
-      installer_id: 'u1',
+      installer_id: null,
       status: data.status,
       payment_status: data.payment_status,
       total: data.total,
@@ -292,11 +122,6 @@ export const workOrderService = {
       files: [],
     }
 
-    // Always update local storage first
-    const currentList = getLocalWorkOrders()
-    saveLocalWorkOrders([newOrder, ...currentList])
-
-    // Try Supabase in background
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -308,11 +133,17 @@ export const workOrderService = {
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.company_id) {
+        let companyId = userProfile?.company_id
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
           const { data: inserted, error } = await supabase
             .from('work_orders')
             .insert({
-              company_id: userProfile.company_id,
+              company_id: companyId,
               number,
               customer_id: data.customer_id,
               vehicle_id: data.vehicle_id || null,
@@ -339,6 +170,14 @@ export const workOrderService = {
             }))
 
             await supabase.from('work_order_items').insert(itemsToInsert)
+
+            return {
+              ...inserted,
+              customer,
+              vehicle,
+              items: itemsToInsert,
+              files: [],
+            }
           }
         }
       }
@@ -346,11 +185,12 @@ export const workOrderService = {
       // Fallback
     }
 
+    const currentList = getLocalWorkOrders()
+    saveLocalWorkOrders([newOrder, ...currentList])
     return newOrder
   },
 
   async createFromApprovedQuote(quote: any): Promise<WorkOrderWithRelations> {
-    // Check if an order for this quote already exists
     const currentList = getLocalWorkOrders()
     const existing = currentList.find((w) => w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number)))
     if (existing) return existing
@@ -391,6 +231,20 @@ export const workOrderService = {
   },
 
   async updateStatus(id: string, status: WorkOrderStatus): Promise<void> {
+    try {
+      const supabase = createClient()
+      await supabase
+        .from('work_orders')
+        .update({
+          status,
+          completed_at: status === 'CONCLUIDO' ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+    } catch {
+      // Fallback
+    }
+
     const currentList = getLocalWorkOrders()
     const index = currentList.findIndex((w) => w.id === id)
     if (index !== -1) {
@@ -401,38 +255,25 @@ export const workOrderService = {
       currentList[index].updated_at = new Date().toISOString()
       saveLocalWorkOrders(currentList)
     }
+  },
 
+  async updatePaymentStatus(id: string, payment_status: PaymentStatus): Promise<void> {
     try {
       const supabase = createClient()
       await supabase
         .from('work_orders')
-        .update({
-          status,
-          completed_at: status === 'CONCLUIDO' ? new Date().toISOString() : null,
-        })
+        .update({ payment_status, updated_at: new Date().toISOString() })
         .eq('id', id)
     } catch {
       // Fallback
     }
-  },
 
-  async updatePaymentStatus(id: string, payment_status: PaymentStatus): Promise<void> {
     const currentList = getLocalWorkOrders()
     const index = currentList.findIndex((w) => w.id === id)
     if (index !== -1) {
       currentList[index].payment_status = payment_status
       currentList[index].updated_at = new Date().toISOString()
       saveLocalWorkOrders(currentList)
-    }
-
-    try {
-      const supabase = createClient()
-      await supabase
-        .from('work_orders')
-        .update({ payment_status })
-        .eq('id', id)
-    } catch {
-      // Fallback
     }
   },
 
@@ -451,6 +292,30 @@ export const workOrderService = {
       created_at: new Date().toISOString(),
     }
 
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: userProfile } = await supabase.from('users').select('company_id').eq('id', user.id).single()
+        if (userProfile?.company_id) {
+          const { data: insertedFile } = await supabase.from('files').insert({
+            company_id: userProfile.company_id,
+            work_order_id: orderId,
+            file_type: photo.file_type,
+            url: photo.url,
+            storage_path: `wo_${orderId}/${Date.now()}.jpg`,
+            name: photo.name,
+            size_bytes: 150000,
+            created_by: user.id,
+          }).select().single()
+
+          if (insertedFile) return insertedFile
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
     const currentList = getLocalWorkOrders()
     const index = currentList.findIndex((w) => w.id === orderId)
     if (index !== -1) {
@@ -462,6 +327,13 @@ export const workOrderService = {
   },
 
   async deletePhoto(orderId: string, fileId: string): Promise<void> {
+    try {
+      const supabase = createClient()
+      await supabase.from('files').delete().eq('id', fileId)
+    } catch {
+      // Fallback
+    }
+
     const currentList = getLocalWorkOrders()
     const index = currentList.findIndex((w) => w.id === orderId)
     if (index !== -1) {
@@ -471,14 +343,14 @@ export const workOrderService = {
   },
 
   async delete(id: string): Promise<void> {
-    const currentList = getLocalWorkOrders()
-    saveLocalWorkOrders(currentList.filter((w) => w.id !== id))
-
     try {
       const supabase = createClient()
       await supabase.from('work_orders').delete().eq('id', id)
     } catch {
       // Fallback
     }
+
+    const currentList = getLocalWorkOrders()
+    saveLocalWorkOrders(currentList.filter((w) => w.id !== id))
   },
 }

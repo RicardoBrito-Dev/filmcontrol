@@ -12,116 +12,14 @@ export interface FinancialSummary {
 
 const STORAGE_KEY = 'filmcontrol_financial_transactions'
 
-const initialSeedTransactions: FinancialTransaction[] = [
-  {
-    id: 'ft1',
-    company_id: 'comp1',
-    description: 'Instalação Película G5 — Onix Plus (OS #5921)',
-    category: 'Vendas de Películas',
-    amount: 550.0,
-    type: 'ENTRADA',
-    method: 'PIX',
-    status: 'PAGO',
-    reference_date: new Date(Date.now() - 3 * 86400000).toISOString(),
-    work_order_id: 'wo1',
-    notes: 'Pagamento total via PIX.',
-    created_by: 'u1',
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-  {
-    id: 'ft2',
-    company_id: 'comp1',
-    description: 'Sinal 50% — Nano Cerâmica Civic Touring (OS #5922)',
-    category: 'Vendas de Películas',
-    amount: 425.0,
-    type: 'ENTRADA',
-    method: 'CREDITO',
-    status: 'PAGO',
-    reference_date: new Date(Date.now() - 1 * 86400000).toISOString(),
-    work_order_id: 'wo2',
-    notes: 'Cartão de crédito 2x.',
-    created_by: 'u1',
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: 'ft3',
-    company_id: 'comp1',
-    description: 'Compra de Rolos de Película G5 e Cerâmica',
-    category: 'Estoque / Fornecedores',
-    amount: 1450.0,
-    type: 'SAIDA',
-    method: 'BOLETO',
-    status: 'PAGO',
-    reference_date: new Date(Date.now() - 10 * 86400000).toISOString(),
-    work_order_id: null,
-    notes: 'Distribuidora São Paulo - NF 84920',
-    created_by: 'u1',
-    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-  },
-  {
-    id: 'ft4',
-    company_id: 'comp1',
-    description: 'Aluguel do Ponto Comercial / Galpão',
-    category: 'Despesas Fixas',
-    amount: 2200.0,
-    type: 'SAIDA',
-    method: 'TRANSFERENCIA',
-    status: 'PAGO',
-    reference_date: new Date(Date.now() - 15 * 86400000).toISOString(),
-    work_order_id: null,
-    notes: 'Competência do mês atual.',
-    created_by: 'u1',
-    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-  },
-  {
-    id: 'ft5',
-    company_id: 'comp1',
-    description: 'Conta de Energia Elétrica / Iluminação',
-    category: 'Contas de Consumo',
-    amount: 380.5,
-    type: 'SAIDA',
-    method: 'PIX',
-    status: 'PENDENTE',
-    reference_date: new Date(Date.now() + 5 * 86400000).toISOString(),
-    work_order_id: null,
-    notes: 'Vencimento em 5 dias.',
-    created_by: 'u1',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'ft6',
-    company_id: 'comp1',
-    description: 'Saldo Restante — Nano Cerâmica Civic (OS #5922)',
-    category: 'Vendas de Películas',
-    amount: 425.0,
-    type: 'ENTRADA',
-    method: 'PIX',
-    status: 'PENDENTE',
-    reference_date: new Date(Date.now() + 1 * 86400000).toISOString(),
-    work_order_id: 'wo2',
-    notes: 'Receber na entrega do veículo.',
-    created_by: 'u1',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-]
-
 function getLocalTransactions(): FinancialTransaction[] {
-  if (typeof window === 'undefined') return initialSeedTransactions
+  if (typeof window === 'undefined') return []
   const data = localStorage.getItem(STORAGE_KEY)
-  if (!data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSeedTransactions))
-    return initialSeedTransactions
-  }
+  if (!data) return []
   try {
     return JSON.parse(data)
   } catch {
-    return initialSeedTransactions
+    return []
   }
 }
 
@@ -140,13 +38,14 @@ export const financialService = {
         .select('*')
         .order('reference_date', { ascending: false })
 
-      if (error || !data || data.length === 0) {
-        return getLocalTransactions()
+      if (!error && data) {
+        return data
       }
-      return data
     } catch {
-      return getLocalTransactions()
+      // Fallback
     }
+
+    return getLocalTransactions()
   },
 
   async getSummary(): Promise<FinancialSummary> {
@@ -195,11 +94,17 @@ export const financialService = {
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.company_id) {
+        let companyId = userProfile?.company_id
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
           const { data: newTx, error } = await supabase
             .from('financial_transactions')
             .insert({
-              company_id: userProfile.company_id,
+              company_id: companyId,
               description: data.description,
               category: data.category,
               amount: data.amount,
@@ -245,7 +150,7 @@ export const financialService = {
   async updateStatus(id: string, status: FinancialTransaction['status']): Promise<void> {
     try {
       const supabase = createClient()
-      await supabase.from('financial_transactions').update({ status }).eq('id', id)
+      await supabase.from('financial_transactions').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
     } catch {
       // Fallback
     }

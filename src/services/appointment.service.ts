@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
-import type { Appointment, AppointmentStatus, Customer, Vehicle, Quote } from '@/types/database.types'
+import type { Appointment, AppointmentStatus, Customer, Vehicle } from '@/types/database.types'
 import type { AppointmentFormData } from '@/schemas/appointment.schema'
 
 export interface AppointmentWithRelations extends Appointment {
@@ -10,154 +10,14 @@ export interface AppointmentWithRelations extends Appointment {
 
 const STORAGE_KEY = 'filmcontrol_appointments'
 
-const initialSeedAppointments: AppointmentWithRelations[] = [
-  {
-    id: 'apt1',
-    company_id: 'comp1',
-    customer_id: 'c1',
-    vehicle_id: 'v1',
-    work_order_id: null,
-    title: 'Aplicação Película G5 Completa',
-    start_time: new Date(new Date().setHours(9, 0, 0, 0)).toISOString(),
-    end_time: new Date(new Date().setHours(10, 30, 0, 0)).toISOString(),
-    address: 'Na loja',
-    installer_id: 'u1',
-    notes: 'Cliente aguardando na loja.',
-    status: 'CONCLUIDO',
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    customer: {
-      id: 'c1',
-      company_id: 'comp1',
-      name: 'João Silva',
-      document: '123.456.789-00',
-      phone: '(11) 3456-7890',
-      whatsapp: '(11) 99999-1111',
-      email: 'joao.silva@email.com',
-      zip_code: '05432-000',
-      address: 'Rua Harmonia',
-      address_number: '120',
-      address_complement: 'Apto 42',
-      neighborhood: 'Vila Madalena',
-      city: 'São Paulo',
-      state: 'SP',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    vehicle: {
-      id: 'v1',
-      company_id: 'comp1',
-      customer_id: 'c1',
-      brand: 'Chevrolet',
-      model: 'Onix Plus Premier',
-      year: 2023,
-      color: 'Prata Shark',
-      plate: 'BRA-2E19',
-      type: 'CARRO',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-  },
-  {
-    id: 'apt2',
-    company_id: 'comp1',
-    customer_id: 'c2',
-    vehicle_id: 'v3',
-    work_order_id: null,
-    title: 'Nano Cerâmica + Para-brisa',
-    start_time: new Date(new Date().setHours(11, 30, 0, 0)).toISOString(),
-    end_time: new Date(new Date().setHours(13, 30, 0, 0)).toISOString(),
-    address: 'Na loja',
-    installer_id: 'u1',
-    notes: 'Honda Civic Touring preto.',
-    status: 'EM_ANDAMENTO',
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    customer: {
-      id: 'c2',
-      company_id: 'comp1',
-      name: 'Pedro Henrique Souza',
-      document: '234.567.890-11',
-      phone: null,
-      whatsapp: '(11) 98888-2222',
-      email: 'pedro.souza@email.com',
-      zip_code: '04538-133',
-      address: 'Av. Moema',
-      address_number: '740',
-      address_complement: 'Bloco B',
-      neighborhood: 'Moema',
-      city: 'São Paulo',
-      state: 'SP',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    vehicle: {
-      id: 'v3',
-      company_id: 'comp1',
-      customer_id: 'c2',
-      brand: 'Honda',
-      model: 'Civic Touring',
-      year: 2022,
-      color: 'Preto Cristal',
-      plate: 'CIV-9H88',
-      type: 'CARRO',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-  },
-  {
-    id: 'apt3',
-    company_id: 'comp1',
-    customer_id: 'c3',
-    vehicle_id: null,
-    work_order_id: null,
-    title: 'Aplicação Residencial — Jateado Sacada',
-    start_time: new Date(new Date().setHours(14, 30, 0, 0)).toISOString(),
-    end_time: new Date(new Date().setHours(16, 30, 0, 0)).toISOString(),
-    address: 'Alameda Lorena, 550 - Jardins',
-    installer_id: 'u1',
-    notes: 'Levar escada e solução de limpeza para vidros altos.',
-    status: 'CONFIRMADO',
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    customer: {
-      id: 'c3',
-      company_id: 'comp1',
-      name: 'Maria Clara Santos',
-      document: '345.678.901-22',
-      phone: null,
-      whatsapp: '(11) 97777-3333',
-      email: 'maria.clara@email.com',
-      zip_code: '01426-001',
-      address: 'Alameda Lorena',
-      address_number: '550',
-      address_complement: 'Casa',
-      neighborhood: 'Jardins',
-      city: 'São Paulo',
-      state: 'SP',
-      notes: null,
-      created_at: '',
-      updated_at: '',
-    },
-    vehicle: null,
-  },
-]
-
 function getLocalAppointments(): AppointmentWithRelations[] {
-  if (typeof window === 'undefined') return initialSeedAppointments
+  if (typeof window === 'undefined') return []
   const data = localStorage.getItem(STORAGE_KEY)
-  if (!data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialSeedAppointments))
-    return initialSeedAppointments
-  }
+  if (!data) return []
   try {
     return JSON.parse(data)
   } catch {
-    return initialSeedAppointments
+    return []
   }
 }
 
@@ -180,13 +40,14 @@ export const appointmentService = {
         `)
         .order('start_time', { ascending: true })
 
-      if (error || !data || data.length === 0) {
-        return getLocalAppointments()
+      if (!error && data) {
+        return data
       }
-      return data
     } catch {
-      return getLocalAppointments()
+      // Fallback
     }
+
+    return getLocalAppointments()
   },
 
   async create(data: AppointmentFormData, customer?: Customer, vehicle?: Vehicle | null): Promise<AppointmentWithRelations> {
@@ -201,7 +62,7 @@ export const appointmentService = {
       start_time: data.start_time,
       end_time: data.end_time || null,
       address: data.address || null,
-      installer_id: 'u1',
+      installer_id: null,
       status: data.status,
       notes: data.notes || null,
       created_at: new Date().toISOString(),
@@ -209,9 +70,6 @@ export const appointmentService = {
       customer,
       vehicle,
     }
-
-    const currentList = getLocalAppointments()
-    saveLocalAppointments([newApt, ...currentList])
 
     try {
       const supabase = createClient()
@@ -224,11 +82,17 @@ export const appointmentService = {
           .eq('id', user.id)
           .single()
 
-        if (userProfile?.company_id) {
-          await supabase
+        let companyId = userProfile?.company_id
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
+          const { data: dbApt, error } = await supabase
             .from('appointments')
             .insert({
-              company_id: userProfile.company_id,
+              company_id: companyId,
               customer_id: data.customer_id,
               vehicle_id: data.vehicle_id || null,
               title: data.title,
@@ -238,12 +102,20 @@ export const appointmentService = {
               status: data.status,
               notes: data.notes || null,
             })
+            .select(`*, customer:customers(*), vehicle:vehicles(*)`)
+            .single()
+
+          if (!error && dbApt) {
+            return dbApt
+          }
         }
       }
     } catch {
       // Fallback
     }
 
+    const currentList = getLocalAppointments()
+    saveLocalAppointments([newApt, ...currentList])
     return newApt
   },
 
@@ -280,6 +152,24 @@ export const appointmentService = {
   },
 
   async updateDateTime(id: string, startTime: string, endTime?: string | null, fallbackApt?: AppointmentWithRelations | null): Promise<AppointmentWithRelations> {
+    try {
+      const supabase = createClient()
+      const { data: updated, error } = await supabase
+        .from('appointments')
+        .update({
+          start_time: startTime,
+          end_time: endTime || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select(`*, customer:customers(*), vehicle:vehicles(*)`)
+        .single()
+
+      if (!error && updated) return updated
+    } catch {
+      // Fallback
+    }
+
     const currentList = getLocalAppointments()
     const index = currentList.findIndex((a) => a.id === id)
 
@@ -310,7 +200,7 @@ export const appointmentService = {
         start_time: startTime,
         end_time: endTime || null,
         address: 'Na Loja',
-        installer_id: 'u1',
+        installer_id: null,
         status: 'CONFIRMADO',
         notes: null,
         created_at: new Date().toISOString(),
@@ -319,24 +209,27 @@ export const appointmentService = {
       saveLocalAppointments([updatedApt, ...currentList])
     }
 
-    try {
-      const supabase = createClient()
-      await supabase
-        .from('appointments')
-        .update({
-          start_time: startTime,
-          end_time: endTime || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-    } catch {
-      // Fallback
-    }
-
     return updatedApt
   },
 
   async update(id: string, data: Partial<AppointmentFormData>): Promise<AppointmentWithRelations> {
+    try {
+      const supabase = createClient()
+      const { data: updated, error } = await supabase
+        .from('appointments')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select(`*, customer:customers(*), vehicle:vehicles(*)`)
+        .single()
+
+      if (!error && updated) return updated
+    } catch {
+      // Fallback
+    }
+
     const currentList = getLocalAppointments()
     const index = currentList.findIndex((a) => a.id === id)
     if (index !== -1) {
@@ -352,6 +245,13 @@ export const appointmentService = {
   },
 
   async updateStatus(id: string, status: AppointmentStatus): Promise<void> {
+    try {
+      const supabase = createClient()
+      await supabase.from('appointments').update({ status, updated_at: new Date().toISOString() }).eq('id', id)
+    } catch {
+      // Fallback
+    }
+
     const currentList = getLocalAppointments()
     const index = currentList.findIndex((a) => a.id === id)
     if (index !== -1) {
@@ -359,24 +259,17 @@ export const appointmentService = {
       currentList[index].updated_at = new Date().toISOString()
       saveLocalAppointments(currentList)
     }
-
-    try {
-      const supabase = createClient()
-      await supabase.from('appointments').update({ status }).eq('id', id)
-    } catch {
-      // Fallback
-    }
   },
 
   async delete(id: string): Promise<void> {
-    const currentList = getLocalAppointments()
-    saveLocalAppointments(currentList.filter((a) => a.id !== id))
-
     try {
       const supabase = createClient()
       await supabase.from('appointments').delete().eq('id', id)
     } catch {
       // Fallback
     }
+
+    const currentList = getLocalAppointments()
+    saveLocalAppointments(currentList.filter((a) => a.id !== id))
   },
 }
