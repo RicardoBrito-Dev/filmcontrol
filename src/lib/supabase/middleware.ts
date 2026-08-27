@@ -1,19 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function updateSession(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const DEFAULT_SUPABASE_URL = 'https://jkqvyudttonrdmsmyabx.supabase.co'
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprcXZ5dWR0dG9ucmRtc215YWJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3ODk2NjYsImV4cCI6MjEwMzM2NTY2Nn0.KmmhGpUh869NZOG5ANCdKWZyuF4aj38nwHDYq3tfNnA'
 
-  // If Supabase environment variables are not yet configured, allow navigation in dev mode
-  if (
-    !supabaseUrl ||
-    !supabaseAnonKey ||
-    supabaseUrl.includes('your-project') ||
-    supabaseAnonKey.includes('your-anon-key')
-  ) {
-    return NextResponse.next({ request })
-  }
+export async function updateSession(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY
 
   let supabaseResponse = NextResponse.next({
     request,
