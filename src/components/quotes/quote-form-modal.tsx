@@ -576,9 +576,10 @@ export function QuoteFormModal({
                     className="rounded-lg border bg-muted/30 p-3 space-y-2 relative"
                   >
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-12 items-end">
+                      {/* Descrição e Catálogo */}
                       <div className="sm:col-span-6 space-y-1">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs">Serviço / Película</Label>
+                          <Label className="text-xs font-semibold">Serviço / Película</Label>
                           {services.length > 0 && (
                             <select
                               onChange={(e) => {
@@ -615,14 +616,15 @@ export function QuoteFormModal({
                           onChange={(e) =>
                             handleItemChange(index, 'description', e.target.value)
                           }
-                          placeholder="Ex: Película Nano Cerâmica ou Jateado Sacada"
+                          placeholder="Ex: Película Nano Cerâmica Completa ou Jateado Sacada"
                           className="h-9 text-sm"
                           required
                         />
                       </div>
 
+                      {/* Quantidade */}
                       <div className="sm:col-span-2 space-y-1">
-                        <Label className="text-xs">Qtd</Label>
+                        <Label className="text-xs font-semibold">Qtd (un/m²)</Label>
                         <Input
                           type="number"
                           min={0.1}
@@ -635,23 +637,30 @@ export function QuoteFormModal({
                         />
                       </div>
 
+                      {/* Valor do Serviço / Preço */}
                       <div className="sm:col-span-2 space-y-1">
-                        <Label className="text-xs">Unitário (R$)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={item.unit_price}
-                          onChange={(e) =>
-                            handleItemChange(index, 'unit_price', e.target.value)
-                          }
-                          className="h-9 text-sm font-mono"
-                        />
+                        <Label className="text-xs font-semibold text-foreground">
+                          {Number(item.quantity || 1) > 1 ? 'Preço por Un. (R$)' : 'Valor (R$)'}
+                        </Label>
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.unit_price}
+                            onChange={(e) =>
+                              handleItemChange(index, 'unit_price', e.target.value)
+                            }
+                            className="h-9 text-sm font-mono pl-8"
+                          />
+                        </div>
                       </div>
 
+                      {/* Total do Item & Excluir */}
                       <div className="sm:col-span-2 flex items-center justify-between gap-2">
                         <div className="space-y-1">
-                          <Label className="text-xs">Subtotal</Label>
-                          <div className="font-bold text-sm text-foreground">
+                          <Label className="text-xs font-semibold text-primary">Total do Item</Label>
+                          <div className="font-bold text-sm text-primary">
                             {formatCurrency(item.subtotal)}
                           </div>
                         </div>
@@ -663,6 +672,7 @@ export function QuoteFormModal({
                             size="icon"
                             onClick={() => handleRemoveItem(index)}
                             className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            title="Remover este item"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -670,13 +680,24 @@ export function QuoteFormModal({
                       </div>
                     </div>
 
-                    {item.width && item.height && (
-                      <div className="text-[11px] text-muted-foreground flex items-center gap-2 pt-1 border-t">
-                        <span>
-                          Medidas: {item.width}m × {item.height}m
-                        </span>
-                        <span>•</span>
-                        <span>Área: {item.area} m²</span>
+                    {/* Detalhes de cálculo / dimensões se houver */}
+                    {(Number(item.quantity || 1) > 1 || (item.width && item.height)) && (
+                      <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-2 pt-1 border-t">
+                        {Number(item.quantity || 1) > 1 && (
+                          <span className="font-medium text-foreground/80">
+                            Conta: {item.quantity} × {formatCurrency(Number(item.unit_price || 0))} = {formatCurrency(item.subtotal)}
+                          </span>
+                        )}
+                        {item.width && item.height && (
+                          <>
+                            <span>•</span>
+                            <span>
+                              Medidas: {item.width}m × {item.height}m
+                            </span>
+                            <span>•</span>
+                            <span>Área Total: {item.area} m²</span>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>

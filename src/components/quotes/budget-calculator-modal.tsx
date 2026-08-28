@@ -123,12 +123,12 @@ export function BudgetCalculatorModal({
     if (onApplyCalculation) {
       const filmName = pricingConfig[selectedFilmKey]?.name || 'Película'
       onApplyCalculation({
-        description: `${filmName} - ${description} (${quantity} un de ${width}m x ${height}m = ${calc.totalArea}m²)`,
-        quantity: quantity,
+        description: `${filmName} - ${description} (${quantity} vidros • ${calc.totalArea} m²)`,
+        quantity: 1,
         width: width,
         height: height,
         area: calc.totalArea,
-        unitPrice: calc.pricePerUnit,
+        unitPrice: calc.finalPrice,
         totalPrice: calc.finalPrice,
       })
       toast({

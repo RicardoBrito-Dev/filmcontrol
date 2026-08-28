@@ -516,18 +516,20 @@ export function WorkOrderFormModal({
                     )}
                   </div>
                   <div className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-6">
+                    <div className="col-span-6 space-y-0.5">
+                      <Label className="text-[11px] text-muted-foreground">Descrição</Label>
                       <Input
                         value={item.description}
                         onChange={(e) =>
                           handleItemChange(index, 'description', e.target.value)
                         }
-                        placeholder="Descrição do serviço"
+                        placeholder="Ex: Película G5 Completa"
                         className="text-xs h-8"
                         required
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-2 space-y-0.5">
+                      <Label className="text-[11px] text-muted-foreground">Qtd</Label>
                       <Input
                         type="number"
                         min={1}
@@ -538,7 +540,10 @@ export function WorkOrderFormModal({
                         className="text-xs text-center font-mono h-8"
                       />
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-3 space-y-0.5">
+                      <Label className="text-[11px] text-muted-foreground">
+                        {Number(item.quantity || 1) > 1 ? 'Preço p/ Un.' : 'Valor (R$)'}
+                      </Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -549,20 +554,28 @@ export function WorkOrderFormModal({
                         className="text-xs font-mono h-8"
                       />
                     </div>
-                    <div className="col-span-1 flex justify-end">
+                    <div className="col-span-1 flex justify-end pt-4">
                       {items.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => handleRemoveItem(index)}
-                          className="h-7 w-7 text-destructive"
+                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                          title="Remover item"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
                     </div>
                   </div>
+
+                  {Number(item.quantity || 1) > 1 && (
+                    <div className="text-[11px] text-muted-foreground pt-1 border-t flex justify-between">
+                      <span>Conta: {item.quantity} × {formatCurrency(Number(item.unit_price || 0))}</span>
+                      <span className="font-semibold text-foreground">Total do Item: {formatCurrency(item.subtotal)}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
