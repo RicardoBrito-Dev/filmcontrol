@@ -164,7 +164,7 @@ export const quoteService = {
 
             await supabase.from('quote_items').insert(itemsToInsert)
 
-            const fullQuote = {
+            const fullQuote: QuoteWithRelations = {
               ...insertedQuote,
               customer,
               vehicle,
@@ -198,6 +198,122 @@ export const quoteService = {
     }
 
     return newQuote
+  },
+
+  async update(id: string, data: QuoteFormData, customer?: Customer, vehicle?: Vehicle | null): Promise<QuoteWithRelations> {
+    const updatedItems = data.items.map((item, idx) => ({
+      id: 'qi_' + Date.now() + '_' + idx,
+      quote_id: id,
+      service_id: item.service_id || null,
+      description: item.description,
+      quantity: item.quantity,
+      width: item.width || null,
+      height: item.height || null,
+      area: item.area || null,
+      unit_price: item.unit_price,
+      subtotal: item.subtotal,
+    }))
+
+    try {
+      const supabase = createClient()
+      const { data: updated, error } = await supabase
+        .from('quotes')
+        .update({
+          customer_id: data.customer_id,
+          vehicle_id: data.vehicle_id || null,
+          status: data.status,
+          subtotal: data.subtotal,
+          discount: data.discount || 0,
+          total: data.total,
+          valid_until: data.valid_until || null,
+          notes: data.notes || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (!error && updated) {
+        // Delete old items and insert updated items
+        await supabase.from('quote_items').delete().eq('quote_id', id)
+        if (updatedItems.length > 0) {
+          await supabase.from('quote_items').insert(updatedItems)
+        }
+
+        const fullQuote: QuoteWithRelations = {
+          ...updated,
+          customer,
+          vehicle,
+          items: updatedItems,
+        }
+
+        if (data.status === 'APROVADO') {
+          await Promise.all([
+            appointmentService.createFromApprovedQuote(fullQuote),
+            workOrderService.createFromApprovedQuote(fullQuote),
+          ])
+        }
+
+        return fullQuote
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Local fallback
+    const currentList = getLocalQuotes()
+    const index = currentList.findIndex((q) => q.id === id)
+    let updatedQuote: QuoteWithRelations
+
+    if (index !== -1) {
+      currentList[index] = {
+        ...currentList[index],
+        customer_id: data.customer_id,
+        vehicle_id: data.vehicle_id || null,
+        status: data.status,
+        subtotal: data.subtotal,
+        discount: data.discount || 0,
+        total: data.total,
+        valid_until: data.valid_until || null,
+        notes: data.notes || null,
+        updated_at: new Date().toISOString(),
+        customer: customer || currentList[index].customer,
+        vehicle: vehicle || currentList[index].vehicle,
+        items: updatedItems,
+      }
+      updatedQuote = currentList[index]
+      saveLocalQuotes(currentList)
+    } else {
+      updatedQuote = {
+        id,
+        company_id: 'comp1',
+        number: generateQuoteNumber(),
+        customer_id: data.customer_id,
+        vehicle_id: data.vehicle_id || null,
+        status: data.status,
+        subtotal: data.subtotal,
+        discount: data.discount || 0,
+        total: data.total,
+        valid_until: data.valid_until || null,
+        notes: data.notes || null,
+        created_by: 'u1',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        customer,
+        vehicle,
+        items: updatedItems,
+      }
+      saveLocalQuotes([updatedQuote, ...currentList])
+    }
+
+    if (data.status === 'APROVADO') {
+      await Promise.all([
+        appointmentService.createFromApprovedQuote(updatedQuote),
+        workOrderService.createFromApprovedQuote(updatedQuote),
+      ])
+    }
+
+    return updatedQuote
   },
 
   async updateStatus(id: string, status: QuoteStatus, explicitQuote?: QuoteWithRelations): Promise<QuoteWithRelations | null> {

@@ -16,6 +16,7 @@ export default function OrcamentosPage() {
   const [loading, setLoading] = useState(true)
 
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
+  const [editingQuote, setEditingQuote] = useState<QuoteWithRelations | null>(null)
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
 
   const loadQuotes = async () => {
@@ -45,6 +46,16 @@ export default function OrcamentosPage() {
     }
   }
 
+  const handleEdit = (quote: QuoteWithRelations) => {
+    setEditingQuote(quote)
+    setIsQuoteModalOpen(true)
+  }
+
+  const handleAddNew = () => {
+    setEditingQuote(null)
+    setIsQuoteModalOpen(true)
+  }
+
   const handleUpdateStatus = async (
     id: string,
     status: QuoteWithRelations['status']
@@ -70,7 +81,16 @@ export default function OrcamentosPage() {
   }
 
   const handleQuoteSaved = (saved: QuoteWithRelations) => {
-    setQuotes((prev) => [saved, ...prev])
+    setQuotes((prev) => {
+      const index = prev.findIndex((q) => q.id === saved.id)
+      if (index !== -1) {
+        const updated = [...prev]
+        updated[index] = saved
+        return updated
+      }
+      return [saved, ...prev]
+    })
+    setEditingQuote(null)
   }
 
   // Summary calculations
@@ -94,7 +114,7 @@ export default function OrcamentosPage() {
             Gestão de Orçamentos
           </h1>
           <p className="text-sm text-muted-foreground">
-            Emita propostas comerciais para clientes com cálculo de área, PDF para impressão e envio no WhatsApp.
+            Emita e edite propostas comerciais com cálculo de área, PDF para impressão e envio no WhatsApp.
           </p>
         </div>
 
@@ -106,7 +126,7 @@ export default function OrcamentosPage() {
           >
             <Calculator className="h-4 w-4" /> Calculadora de Vidros
           </Button>
-          <Button onClick={() => setIsQuoteModalOpen(true)} className="gap-1.5">
+          <Button onClick={handleAddNew} className="gap-1.5 font-bold">
             <Plus className="h-4 w-4" /> Novo Orçamento
           </Button>
         </div>
@@ -183,7 +203,8 @@ export default function OrcamentosPage() {
       <QuoteTable
         quotes={quotes}
         onDelete={handleDelete}
-        onAddNew={() => setIsQuoteModalOpen(true)}
+        onAddNew={handleAddNew}
+        onEdit={handleEdit}
         onOpenCalculator={() => setIsCalculatorOpen(true)}
         onUpdateStatus={handleUpdateStatus}
       />
@@ -191,7 +212,11 @@ export default function OrcamentosPage() {
       {/* Modais */}
       <QuoteFormModal
         open={isQuoteModalOpen}
-        onOpenChange={setIsQuoteModalOpen}
+        onOpenChange={(open) => {
+          setIsQuoteModalOpen(open)
+          if (!open) setEditingQuote(null)
+        }}
+        quoteToEdit={editingQuote}
         onSuccess={handleQuoteSaved}
       />
 

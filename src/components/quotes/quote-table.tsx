@@ -14,6 +14,7 @@ import {
   Calendar,
   XCircle,
   Plus,
+  Edit2,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ interface QuoteTableProps {
   quotes: QuoteWithRelations[]
   onDelete: (id: string) => void
   onAddNew: () => void
+  onEdit?: (quote: QuoteWithRelations) => void
   onOpenCalculator?: () => void
   onUpdateStatus: (id: string, status: QuoteWithRelations['status']) => void
 }
@@ -48,6 +50,7 @@ export function QuoteTable({
   quotes,
   onDelete,
   onAddNew,
+  onEdit,
   onUpdateStatus,
 }: QuoteTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -169,25 +172,36 @@ export function QuoteTable({
                   </div>
 
                   {/* Mobile Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button asChild size="sm" variant="outline" className="text-xs gap-1 h-8">
+                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t">
+                    <Button asChild size="sm" variant="outline" className="text-xs gap-1 h-8 px-2">
                       <Link href={`/orcamentos/${quote.id}`}>
-                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Ver Proposta
+                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Ver
                       </Link>
                     </Button>
+
+                    {onEdit && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => onEdit(quote)}
+                        className="text-xs gap-1 h-8 px-2 font-semibold"
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-amber-500" /> Editar
+                      </Button>
+                    )}
 
                     {quote.status !== 'APROVADO' ? (
                       <Button
                         size="sm"
                         onClick={() => onUpdateStatus(quote.id, 'APROVADO')}
-                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-8"
+                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-8 px-2"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
                       </Button>
                     ) : (
-                      <Button asChild size="sm" variant="secondary" className="text-xs gap-1 h-8 font-semibold">
+                      <Button asChild size="sm" variant="secondary" className="text-xs gap-1 h-8 px-2 font-semibold">
                         <Link href="/agenda">
-                          <Calendar className="h-3.5 w-3.5 text-primary" /> Na Agenda
+                          <Calendar className="h-3.5 w-3.5 text-primary" /> Agenda
                         </Link>
                       </Button>
                     )}
@@ -277,6 +291,18 @@ export function QuoteTable({
 
                         <td className="px-4 py-3.5 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {onEdit && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => onEdit(quote)}
+                                className="h-8 text-xs gap-1 font-semibold"
+                                title="Editar orçamento"
+                              >
+                                <Edit2 className="h-3.5 w-3.5 text-amber-500" /> Editar
+                              </Button>
+                            )}
+
                             {quote.status !== 'APROVADO' ? (
                               <Button
                                 size="sm"
@@ -308,6 +334,15 @@ export function QuoteTable({
                                     <Eye className="h-4 w-4 text-blue-500" /> Ver / Imprimir PDF
                                   </Link>
                                 </DropdownMenuItem>
+
+                                {onEdit && (
+                                  <DropdownMenuItem
+                                    onClick={() => onEdit(quote)}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Edit2 className="h-4 w-4 text-amber-500" /> Editar Dados
+                                  </DropdownMenuItem>
+                                )}
 
                                 {quote.status !== 'RECUSADO' && (
                                   <DropdownMenuItem

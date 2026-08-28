@@ -14,6 +14,7 @@ import {
   MapPin,
   Building2,
   UserPlus,
+  Edit,
 } from 'lucide-react'
 import {
   Dialog,
@@ -29,7 +30,7 @@ import { Label } from '@/components/ui/label'
 import { quoteService, type QuoteWithRelations } from '@/services/quote.service'
 import { customerService, type CustomerWithRelations, type QuickVehicleInput } from '@/services/customer.service'
 import { serviceService } from '@/services/service.service'
-import type { ServiceCatalog, VehicleType } from '@/types/database.types'
+import type { ServiceCatalog, VehicleType, Vehicle } from '@/types/database.types'
 import type { QuoteFormData, QuoteItemFormData } from '@/schemas/quote.schema'
 import { BudgetCalculatorModal } from '@/components/quotes/budget-calculator-modal'
 import { formatCurrency } from '@/lib/utils'
@@ -39,6 +40,7 @@ interface QuoteFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: (quote: QuoteWithRelations) => void
+  quoteToEdit?: QuoteWithRelations | null
 }
 
 const commonBrands = [
@@ -64,13 +66,14 @@ export function QuoteFormModal({
   open,
   onOpenChange,
   onSuccess,
+  quoteToEdit,
 }: QuoteFormModalProps) {
   const [loading, setLoading] = useState(false)
   const [customers, setCustomers] = useState<CustomerWithRelations[]>([])
   const [services, setServices] = useState<ServiceCatalog[]>([])
 
   // Modo de Cliente: 'EXISTING' | 'NEW'
-  const [clientMode, setClientMode] = useState<'EXISTING' | 'NEW'>('NEW')
+  const [clientMode, setClientMode] = useState<'EXISTING' | 'NEW'>('EXISTING')
 
   // Cliente Existente
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
@@ -112,19 +115,69 @@ export function QuoteFormModal({
       const [c, s] = await Promise.all([customerService.list(), serviceService.list()])
       setCustomers(c)
       setServices(s)
-      if (c.length > 0) {
+
+      if (quoteToEdit) {
         setClientMode('EXISTING')
+        setSelectedCustomerId(quoteToEdit.customer_id)
+        setSelectedVehicleId(quoteToEdit.vehicle_id || '')
+        setStatus(quoteToEdit.status)
+        setValidUntil(
+          quoteToEdit.valid_until
+            ? quoteToEdit.valid_until.split('T')[0]
+            : new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]
+        )
+        setDiscount(Number(quoteToEdit.discount) || 0)
+        setNotes(quoteToEdit.notes || '')
+        if (quoteToEdit.items && quoteToEdit.items.length > 0) {
+          setItems(
+            quoteToEdit.items.map((i) => ({
+              service_id: i.service_id,
+              description: i.description,
+              quantity: i.quantity,
+              width: i.width,
+              height: i.height,
+              area: i.area,
+              unit_price: Number(i.unit_price),
+              subtotal: Number(i.subtotal),
+            }))
+          )
+        }
       } else {
-        setClientMode('NEW')
+        if (c.length > 0) {
+          setClientMode('EXISTING')
+        } else {
+          setClientMode('NEW')
+        }
+        setSelectedCustomerId('')
+        setSelectedVehicleId('')
+        setStatus('AGUARDANDO_APROVACAO')
+        setValidUntil(new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0])
+        setDiscount(0)
+        setNotes('')
+        setItems([
+          {
+            description: 'Película G5 Laterais e Traseiro',
+            quantity: 1,
+            width: null,
+            height: null,
+            area: null,
+            unit_price: 350.0,
+            subtotal: 350.0,
+          },
+        ])
       }
     }
+
     if (open) {
       loadData()
     }
-  }, [open])
+  }, [open, quoteToEdit])
 
-  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId)
-  const customerVehicles = selectedCustomer?.vehicles || []
+  const selectedCustomer: CustomerWithRelations | undefined =
+    customers.find((c) => c.id === selectedCustomerId) ||
+    (quoteToEdit?.customer as CustomerWithRelations | undefined)
+  const customerVehicles: Vehicle[] =
+    selectedCustomer?.vehicles || (quoteToEdit?.vehicle ? [quoteToEdit.vehicle] : [])
 
   // Calculate totals
   const subtotal = items.reduce((acc, item) => acc + (item.subtotal || 0), 0)
@@ -268,7 +321,7 @@ export function QuoteFormModal({
           return
         }
         activeCustomer = selectedCustomer || null
-        activeVehicle = customerVehicles.find((v) => v.id === selectedVehicleId) || null
+        activeVehicle = customerVehicles.find((v: Vehicle) => v.id === selectedVehicleId) || null
       }
 
       if (!activeCustomer) {
@@ -287,19 +340,29 @@ export function QuoteFormModal({
         items,
       }
 
-      const created = await quoteService.create(payload, activeCustomer, activeVehicle)
+      let resultQuote: QuoteWithRelations
 
-      toast({
-        title: 'Orçamento gerado com sucesso!',
-        description: `Orçamento ${created.number} gerado para ${activeCustomer.name}.`,
-        variant: 'success' as 'default',
-      })
+      if (quoteToEdit) {
+        resultQuote = await quoteService.update(quoteToEdit.id, payload, activeCustomer, activeVehicle)
+        toast({
+          title: 'Orçamento atualizado!',
+          description: `Orçamento #${resultQuote.number} salvo com sucesso.`,
+          variant: 'success' as 'default',
+        })
+      } else {
+        resultQuote = await quoteService.create(payload, activeCustomer, activeVehicle)
+        toast({
+          title: 'Orçamento gerado com sucesso!',
+          description: `Orçamento #${resultQuote.number} gerado para ${activeCustomer.name}.`,
+          variant: 'success' as 'default',
+        })
+      }
 
-      onSuccess(created)
+      onSuccess(resultQuote)
       onOpenChange(false)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao criar orçamento'
-      toast({ title: 'Erro ao criar orçamento', description: message, variant: 'destructive' })
+      const message = error instanceof Error ? error.message : 'Erro ao processar orçamento'
+      toast({ title: 'Erro no orçamento', description: message, variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -311,10 +374,13 @@ export function QuoteFormModal({
         <DialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <FileText className="h-5 w-5 text-primary" /> Novo Orçamento de Películas
+              <FileText className="h-5 w-5 text-primary" />
+              {quoteToEdit ? `Editar Orçamento #${quoteToEdit.number}` : 'Novo Orçamento de Películas'}
             </DialogTitle>
             <DialogDescription>
-              Crie orçamentos rápidos para clientes novos ou já cadastrados, sem sair desta tela.
+              {quoteToEdit
+                ? 'Altere serviços, películas, medidas, descontos e prazos antes de aprovar.'
+                : 'Crie orçamentos rápidos para clientes novos ou já cadastrados, sem sair desta tela.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -326,36 +392,38 @@ export function QuoteFormModal({
                   <User className="h-3.5 w-3.5 text-primary" /> 1. Cliente & Veículo / Local
                 </h4>
 
-                {/* Alternador Rápido: Novo Cliente vs Cliente Cadastrado */}
-                <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg">
-                  <button
-                    type="button"
-                    onClick={() => setClientMode('NEW')}
-                    className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${
-                      clientMode === 'NEW'
-                        ? 'bg-card text-primary shadow-sm font-bold'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    ✨ Novo Cliente
-                  </button>
+                {/* Alternador Rápido: Novo Cliente vs Cliente Cadastrado (desabilitado se editando orçamento existente) */}
+                {!quoteToEdit && (
+                  <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setClientMode('NEW')}
+                      className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        clientMode === 'NEW'
+                          ? 'bg-card text-primary shadow-sm font-bold'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      ✨ Novo Cliente
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setClientMode('EXISTING')}
-                    className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${
-                      clientMode === 'EXISTING'
-                        ? 'bg-card text-primary shadow-sm font-bold'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    👤 Cliente Já Cadastrado ({customers.length})
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => setClientMode('EXISTING')}
+                      className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${
+                        clientMode === 'EXISTING'
+                          ? 'bg-card text-primary shadow-sm font-bold'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      👤 Cliente Cadastrado ({customers.length})
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Se MODO NOVO CLIENTE */}
-              {clientMode === 'NEW' ? (
+              {clientMode === 'NEW' && !quoteToEdit ? (
                 <div className="space-y-3 animate-in fade-in duration-200">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1 sm:col-span-2">
@@ -379,7 +447,6 @@ export function QuoteFormModal({
                       />
                     </div>
 
-                    {/* Tipo de Atendimento: Automotivo vs Residencial */}
                     <div className="space-y-1">
                       <Label className="text-xs font-semibold">Tipo de Atendimento</Label>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -409,7 +476,6 @@ export function QuoteFormModal({
                     </div>
                   </div>
 
-                  {/* Campos do Carro ou Endereço */}
                   {newCustType === 'AUTOMOTIVO' ? (
                     <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 pt-1 border-t">
                       <div className="space-y-1">
@@ -501,7 +567,7 @@ export function QuoteFormModal({
                           ? `Residencial: ${selectedCustomer.address}`
                           : 'Atendimento no Local / Na Loja'}
                       </option>
-                      {customerVehicles.map((v) => (
+                      {customerVehicles.map((v: Vehicle) => (
                         <option key={v.id} value={v.id}>
                           🚗 {v.brand} {v.model} {v.plate ? `(${v.plate})` : ''}
                         </option>
@@ -514,7 +580,7 @@ export function QuoteFormModal({
               {/* Linha de Validade e Status */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-2 border-t text-xs">
                 <div className="space-y-1">
-                  <Label htmlFor="q-validity" className="text-xs">Validade da Proposta</Label>
+                  <Label htmlFor="q-validity" className="text-xs font-semibold">Validade da Proposta</Label>
                   <Input
                     id="q-validity"
                     type="date"
@@ -525,7 +591,7 @@ export function QuoteFormModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="q-status" className="text-xs">Status Inicial</Label>
+                  <Label htmlFor="q-status" className="text-xs font-semibold">Status do Orçamento</Label>
                   <select
                     id="q-status"
                     value={status}
@@ -536,6 +602,7 @@ export function QuoteFormModal({
                     <option value="APROVADO">Aprovado (Já entra na Agenda)</option>
                     <option value="ENVIADO">Enviado ao Cliente</option>
                     <option value="RASCUNHO">Rascunho</option>
+                    <option value="RECUSADO">Recusado</option>
                   </select>
                 </div>
               </div>
@@ -728,7 +795,7 @@ export function QuoteFormModal({
                 </div>
 
                 <div className="flex items-center justify-between text-sm gap-4">
-                  <Label htmlFor="q-discount" className="text-muted-foreground text-xs">
+                  <Label htmlFor="q-discount" className="text-muted-foreground text-xs font-semibold">
                     Desconto (R$):
                   </Label>
                   <Input
@@ -765,11 +832,11 @@ export function QuoteFormModal({
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Gerando Orçamento...
+                    {quoteToEdit ? 'Salvando...' : 'Gerando...'}
                   </>
                 ) : (
                   <>
-                    <FileText className="h-4 w-4" /> Gerar Orçamento
+                    <FileText className="h-4 w-4" /> {quoteToEdit ? 'Salvar Alterações' : 'Gerar Orçamento'}
                   </>
                 )}
               </Button>

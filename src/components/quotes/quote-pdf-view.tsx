@@ -1,6 +1,6 @@
 'use client'
 
-import { Printer, MessageCircle, ArrowLeft, CheckCircle2, XCircle, Film, MapPin, Car, Phone, Calendar } from 'lucide-react'
+import { Printer, MessageCircle, ArrowLeft, CheckCircle2, XCircle, Film, MapPin, Car, Phone, Calendar, Edit2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate, formatPhone } from '@/lib/utils'
 import type { QuoteWithRelations } from '@/services/quote.service'
 import { quoteService } from '@/services/quote.service'
+import { QuoteFormModal } from '@/components/quotes/quote-form-modal'
 import { toast } from '@/hooks/use-toast'
 import { useState } from 'react'
 
@@ -24,10 +25,12 @@ const statusConfig = {
   EXPIRADO: { label: 'Expirado', variant: 'secondary' as const },
 }
 
-export function QuotePdfView({ quote }: QuotePdfViewProps) {
+export function QuotePdfView({ quote: initialQuote }: QuotePdfViewProps) {
   const router = useRouter()
-  const [currentStatus, setCurrentStatus] = useState(quote.status)
+  const [quote, setQuote] = useState<QuoteWithRelations>(initialQuote)
+  const [currentStatus, setCurrentStatus] = useState(initialQuote.status)
   const [isApproving, setIsApproving] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const statusInfo = statusConfig[currentStatus] || statusConfig.AGUARDANDO_APROVACAO
 
   const handlePrint = () => {
@@ -39,6 +42,7 @@ export function QuotePdfView({ quote }: QuotePdfViewProps) {
     try {
       await quoteService.updateStatus(quote.id, 'APROVADO', quote)
       setCurrentStatus('APROVADO')
+      setQuote((prev) => ({ ...prev, status: 'APROVADO' }))
       toast({
         title: 'Orçamento Aprovado com Sucesso!',
         description: 'O serviço foi adicionado à sua Agenda. Clique no botão da Agenda para definir data e horário.',
@@ -49,6 +53,11 @@ export function QuotePdfView({ quote }: QuotePdfViewProps) {
     } finally {
       setIsApproving(false)
     }
+  }
+
+  const handleQuoteUpdated = (updated: QuoteWithRelations) => {
+    setQuote(updated)
+    setCurrentStatus(updated.status)
   }
 
   // Generate WhatsApp formatted text
@@ -104,6 +113,14 @@ Ficamos à disposição para agendar a sua instalação!`
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsEditModalOpen(true)}
+            className="gap-2 font-semibold"
+          >
+            <Edit2 className="h-4 w-4 text-amber-500" /> Editar Orçamento
+          </Button>
+
           {whatsappUrl && (
             <Button
               asChild
@@ -117,7 +134,7 @@ Ficamos à disposição para agendar a sua instalação!`
           )}
 
           <Button variant="outline" onClick={handlePrint} className="gap-2">
-            <Printer className="h-4 w-4" /> Imprimir / Salvar PDF
+            <Printer className="h-4 w-4" /> Imprimir / PDF
           </Button>
 
           {currentStatus !== 'APROVADO' ? (
@@ -130,7 +147,7 @@ Ficamos à disposição para agendar a sua instalação!`
               {isApproving ? 'Aprovando...' : 'Aprovar & Agendar na Agenda'}
             </Button>
           ) : (
-            <Button asChild className="gap-2 bg-primary">
+            <Button asChild className="gap-2 bg-primary font-bold">
               <Link href="/agenda">
                 <Calendar className="h-4 w-4" /> Ver na Agenda
               </Link>
@@ -327,6 +344,14 @@ Ficamos à disposição para agendar a sua instalação!`
           </div>
         </div>
       </div>
+
+      {/* Modal de Edição de Orçamento */}
+      <QuoteFormModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        quoteToEdit={quote}
+        onSuccess={handleQuoteUpdated}
+      />
     </div>
   )
 }
