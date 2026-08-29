@@ -16,6 +16,7 @@ import {
   Play,
   Check,
   XCircle,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -66,6 +67,7 @@ export function CalendarView({
   onAppointmentUpdated,
 }: CalendarViewProps) {
   const [viewMode, setViewMode] = useState<'TODOS' | 'HOJE' | 'SEMANA'>('TODOS')
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Quick Date/Time Edit Modal
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false)
@@ -77,22 +79,38 @@ export function CalendarView({
   // Filter appointments
   const filtered = appointments.filter((apt) => {
     const aptDate = new Date(apt.start_time)
+    let periodMatch = true
     if (viewMode === 'HOJE') {
       const today = new Date()
-      return (
+      periodMatch = (
         aptDate.getDate() === today.getDate() &&
         aptDate.getMonth() === today.getMonth() &&
         aptDate.getFullYear() === today.getFullYear()
       )
-    }
-    if (viewMode === 'SEMANA') {
+    } else if (viewMode === 'SEMANA') {
       const startOfWeek = new Date()
       startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
       const endOfWeek = new Date(startOfWeek)
       endOfWeek.setDate(endOfWeek.getDate() + 6)
-      return aptDate >= startOfWeek && aptDate <= endOfWeek
+      periodMatch = aptDate >= startOfWeek && aptDate <= endOfWeek
     }
-    return true
+
+    if (!periodMatch) return false
+    if (!searchTerm.trim()) return true
+
+    const term = searchTerm.toLowerCase().trim()
+    const termDigits = term.replace(/\D/g, '')
+
+    const titleMatch = apt.title?.toLowerCase().includes(term)
+    const custMatch = apt.customer?.name?.toLowerCase().includes(term)
+    const vehMatch = apt.vehicle
+      ? `${apt.vehicle.brand} ${apt.vehicle.model} ${apt.vehicle.plate || ''}`.toLowerCase().includes(term)
+      : false
+    const addrMatch = apt.address?.toLowerCase().includes(term) || apt.customer?.address?.toLowerCase().includes(term)
+    const phoneRaw = (apt.customer?.whatsapp || apt.customer?.phone || '').replace(/\D/g, '')
+    const phoneMatch = termDigits.length >= 2 && phoneRaw.includes(termDigits)
+
+    return titleMatch || custMatch || vehMatch || addrMatch || phoneMatch
   })
 
   const formatToLocalInput = (dateInput: string | Date) => {
@@ -157,23 +175,36 @@ export function CalendarView({
 
   return (
     <div className="space-y-4">
-      {/* Top Filter Toolbar */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-        {[
-          { mode: 'TODOS', label: 'Todos os Agendamentos' },
-          { mode: 'HOJE', label: 'Hoje' },
-          { mode: 'SEMANA', label: 'Esta Semana' },
-        ].map(({ mode, label }) => (
-          <Button
-            key={mode}
-            variant={viewMode === mode ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode(mode as typeof viewMode)}
-            className="text-xs h-8 px-3 shrink-0 font-medium"
-          >
-            {label}
-          </Button>
-        ))}
+      {/* Top Filter Toolbar & Search */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+          {[
+            { mode: 'TODOS', label: 'Todos os Agendamentos' },
+            { mode: 'HOJE', label: 'Hoje' },
+            { mode: 'SEMANA', label: 'Esta Semana' },
+          ].map(({ mode, label }) => (
+            <Button
+              key={mode}
+              variant={viewMode === mode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode(mode as typeof viewMode)}
+              className="text-xs h-8 px-3 shrink-0 font-medium"
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por cliente, carro, placa, serviço..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground transition-all"
+          />
+        </div>
       </div>
 
       {/* Appointment Cards Timeline */}

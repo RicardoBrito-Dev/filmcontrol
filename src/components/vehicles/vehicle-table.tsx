@@ -33,10 +33,15 @@ export function VehicleTable({
   const [searchTerm, setSearchTerm] = useState('')
 
   const filtered = vehicles.filter((v) => {
-    const term = searchTerm.toLowerCase()
+    if (!searchTerm.trim()) return true
+    const term = searchTerm.toLowerCase().trim()
+    const cleanTerm = term.replace(/[^a-z0-9]/g, '')
+
     const brandMatch = v.brand?.toLowerCase().includes(term)
     const modelMatch = v.model?.toLowerCase().includes(term)
-    const plateMatch = v.plate?.toLowerCase().includes(term)
+    const plateMatch =
+      v.plate?.toLowerCase().includes(term) ||
+      (cleanTerm.length >= 2 && v.plate?.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanTerm))
     const customerMatch = v.customer_name?.toLowerCase().includes(term)
     const typeMatch = v.type?.toLowerCase().includes(term)
     return brandMatch || modelMatch || plateMatch || customerMatch || typeMatch
@@ -67,14 +72,16 @@ export function VehicleTable({
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-3">
             <Car className="h-6 w-6 text-muted-foreground" />
           </div>
-          <h3 className="text-base font-semibold">Nenhum veículo cadastrado</h3>
+          <h3 className="text-base font-semibold">
+            {searchTerm ? 'Nenhum veículo encontrado' : 'Nenhum veículo cadastrado'}
+          </h3>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
             {searchTerm
-              ? 'Nenhum veículo corresponde à sua busca.'
-              : 'Cadastre veículos para vincular a ordens de serviço.'}
+              ? `Nenhum resultado para "${searchTerm}". Tente buscar por outros termos.`
+              : 'Cadastre o primeiro veículo e vincule ao cliente.'}
           </p>
           <Button onClick={onAddNew} size="sm" className="gap-2">
-            <Plus className="h-4 w-4" /> Adicionar Veículo
+            <Plus className="h-4 w-4" /> Cadastrar Veículo
           </Button>
         </div>
       ) : (

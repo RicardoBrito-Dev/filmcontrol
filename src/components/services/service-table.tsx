@@ -39,11 +39,12 @@ export function ServiceTable({
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
 
   const filtered = services.filter((s) => {
-    const term = searchTerm.toLowerCase()
-    const nameMatch = s.name?.toLowerCase().includes(term)
-    const descMatch = s.description?.toLowerCase().includes(term)
     const categoryMatch =
       selectedCategory === 'ALL' || s.category === selectedCategory
+    if (!searchTerm.trim()) return categoryMatch
+    const term = searchTerm.toLowerCase().trim()
+    const nameMatch = s.name?.toLowerCase().includes(term)
+    const descMatch = s.description?.toLowerCase().includes(term)
     return (nameMatch || descMatch) && categoryMatch
   })
 

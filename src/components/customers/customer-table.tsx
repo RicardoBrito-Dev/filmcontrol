@@ -46,25 +46,38 @@ export function CustomerTable({
   const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'AUTO' | 'RESID'>('ALL')
 
   const filtered = customers.filter((c) => {
-    const term = searchTerm.toLowerCase()
+    if (!searchTerm.trim()) return true
+
+    const term = searchTerm.toLowerCase().trim()
+    // Also normalize: strip non-digits for phone matching
+    const termDigits = term.replace(/\D/g, '')
+
     const nameMatch = c.name?.toLowerCase().includes(term)
-    const phoneMatch =
-      c.whatsapp?.includes(term) || c.phone?.includes(term)
-    const docMatch = c.document?.toLowerCase().includes(term)
+    const docMatch = c.document?.replace(/\D/g, '').includes(termDigits || term)
+    const emailMatch = c.email?.toLowerCase().includes(term)
     const cityMatch = c.city?.toLowerCase().includes(term)
     const addrMatch = c.address?.toLowerCase().includes(term)
     const neighMatch = c.neighborhood?.toLowerCase().includes(term)
+
+    // Phone matching: compare normalized digits against typed digits OR compare formatted strings
+    const phoneRaw = (c.whatsapp || c.phone || '').replace(/\D/g, '')
+    const phoneMatch =
+      (termDigits.length >= 2 && phoneRaw.includes(termDigits)) ||
+      (c.whatsapp || '').toLowerCase().includes(term) ||
+      (c.phone || '').toLowerCase().includes(term)
+
     const vehMatch = (c.vehicles || []).some(
       (v) =>
         v.brand?.toLowerCase().includes(term) ||
         v.model?.toLowerCase().includes(term) ||
-        v.plate?.toLowerCase().includes(term)
+        v.plate?.toLowerCase().replace(/[^a-z0-9]/g, '').includes(term.replace(/[^a-z0-9]/g, ''))
     )
 
     const matchesSearch =
       nameMatch ||
       phoneMatch ||
       docMatch ||
+      emailMatch ||
       cityMatch ||
       addrMatch ||
       neighMatch ||

@@ -57,16 +57,23 @@ export function QuoteTable({
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
 
   const filtered = quotes.filter((q) => {
-    const term = searchTerm.toLowerCase()
+    const statusMatch = selectedStatus === 'ALL' || q.status === selectedStatus
+
+    if (!searchTerm.trim()) return statusMatch
+
+    const term = searchTerm.toLowerCase().trim()
+    const termDigits = term.replace(/\D/g, '')
+
     const numMatch = q.number?.toLowerCase().includes(term)
     const custMatch = q.customer?.name?.toLowerCase().includes(term)
     const vehMatch = q.vehicle
-      ? `${q.vehicle.brand} ${q.vehicle.model} ${q.vehicle.plate}`.toLowerCase().includes(term)
+      ? `${q.vehicle.brand} ${q.vehicle.model} ${q.vehicle.plate || ''}`.toLowerCase().includes(term)
       : false
-    const statusMatch =
-      selectedStatus === 'ALL' || q.status === selectedStatus
 
-    return (numMatch || custMatch || vehMatch) && statusMatch
+    const phoneRaw = (q.customer?.whatsapp || q.customer?.phone || '').replace(/\D/g, '')
+    const phoneMatch = termDigits.length >= 2 && phoneRaw.includes(termDigits)
+
+    return (numMatch || custMatch || vehMatch || phoneMatch) && statusMatch
   })
 
   return (

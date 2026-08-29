@@ -42,14 +42,17 @@ export function InventoryTable({
   const [filterLowStockOnly, setFilterLowStockOnly] = useState(false)
 
   const filtered = products.filter((p) => {
-    const term = searchTerm.toLowerCase()
+    const isLowStock = Number(p.quantity) <= Number(p.min_quantity)
+    if (filterLowStockOnly && !isLowStock) return false
+
+    if (!searchTerm.trim()) return true
+
+    const term = searchTerm.toLowerCase().trim()
     const nameMatch = p.name?.toLowerCase().includes(term)
     const brandMatch = p.brand?.toLowerCase().includes(term)
     const suppMatch = p.supplier?.toLowerCase().includes(term)
-    const isLowStock = Number(p.quantity) <= Number(p.min_quantity)
 
-    const matchesSearch = nameMatch || brandMatch || suppMatch
-    return filterLowStockOnly ? matchesSearch && isLowStock : matchesSearch
+    return nameMatch || brandMatch || suppMatch
   })
 
   const lowStockCount = products.filter(

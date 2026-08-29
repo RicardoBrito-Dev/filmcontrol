@@ -46,16 +46,24 @@ export function FinancialTable({
   const [filterType, setFilterType] = useState<string>('ALL')
 
   const filtered = transactions.filter((t) => {
-    const term = searchTerm.toLowerCase()
+    const matchesFilter =
+      filterType === 'ALL'
+        ? true
+        : filterType === 'ENTRADA'
+        ? t.type === 'ENTRADA'
+        : filterType === 'SAIDA'
+        ? t.type === 'SAIDA'
+        : filterType === 'PENDENTE'
+        ? t.status === 'PENDENTE'
+        : true
+
+    if (!matchesFilter) return false
+    if (!searchTerm.trim()) return true
+
+    const term = searchTerm.toLowerCase().trim()
     const descMatch = t.description?.toLowerCase().includes(term)
     const catMatch = t.category?.toLowerCase().includes(term)
-    const matchesSearch = descMatch || catMatch
-
-    if (filterType === 'ALL') return matchesSearch
-    if (filterType === 'ENTRADA') return matchesSearch && t.type === 'ENTRADA'
-    if (filterType === 'SAIDA') return matchesSearch && t.type === 'SAIDA'
-    if (filterType === 'PENDENTE') return matchesSearch && t.status === 'PENDENTE'
-    return matchesSearch
+    return descMatch || catMatch
   })
 
   return (

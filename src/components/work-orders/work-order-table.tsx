@@ -59,16 +59,27 @@ export function WorkOrderTable({
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL')
 
   const filtered = orders.filter((o) => {
-    const term = searchTerm.toLowerCase()
+    const statusMatch = selectedStatus === 'ALL' || o.status === selectedStatus
+
+    if (!searchTerm.trim()) return statusMatch
+
+    const term = searchTerm.toLowerCase().trim()
+    const termDigits = term.replace(/\D/g, '')
+
     const numMatch = o.number?.toLowerCase().includes(term)
     const custMatch = o.customer?.name?.toLowerCase().includes(term)
-    const vehMatch = o.vehicle
-      ? `${o.vehicle.brand} ${o.vehicle.model} ${o.vehicle.plate}`.toLowerCase().includes(term)
-      : false
-    const statusMatch =
-      selectedStatus === 'ALL' || o.status === selectedStatus
 
-    return (numMatch || custMatch || vehMatch) && statusMatch
+    const phoneRaw = (o.customer?.whatsapp || o.customer?.phone || '').replace(/\D/g, '')
+    const phoneMatch =
+      (termDigits.length >= 2 && phoneRaw.includes(termDigits)) ||
+      (o.customer?.whatsapp || '').includes(term) ||
+      (o.customer?.phone || '').includes(term)
+
+    const vehMatch = o.vehicle
+      ? `${o.vehicle.brand} ${o.vehicle.model} ${o.vehicle.plate || ''}`.toLowerCase().includes(term)
+      : false
+
+    return (numMatch || custMatch || vehMatch || phoneMatch) && statusMatch
   })
 
   return (
