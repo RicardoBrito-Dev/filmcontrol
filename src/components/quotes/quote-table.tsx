@@ -179,39 +179,60 @@ export function QuoteTable({
                   </div>
 
                   {/* Mobile Action Buttons */}
-                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t">
-                    <Button asChild size="sm" variant="outline" className="text-xs gap-1 h-8 px-2">
+                  <div className="flex items-center gap-1.5 pt-2 border-t">
+                    <Button asChild size="sm" variant="outline" className="flex-1 text-xs gap-1 h-9">
                       <Link href={`/orcamentos/${quote.id}`}>
-                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Ver
+                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Ver Detalhes
                       </Link>
                     </Button>
-
-                    {onEdit && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => onEdit(quote)}
-                        className="text-xs gap-1 h-8 px-2 font-semibold"
-                      >
-                        <Edit2 className="h-3.5 w-3.5 text-amber-500" /> Editar
-                      </Button>
-                    )}
 
                     {quote.status !== 'APROVADO' ? (
                       <Button
                         size="sm"
                         onClick={() => onUpdateStatus(quote.id, 'APROVADO')}
-                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-8 px-2"
+                        className="flex-1 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-9"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
                       </Button>
                     ) : (
-                      <Button asChild size="sm" variant="secondary" className="text-xs gap-1 h-8 px-2 font-semibold">
+                      <Button asChild size="sm" variant="secondary" className="flex-1 text-xs gap-1 h-9 font-semibold">
                         <Link href="/agenda">
-                          <Calendar className="h-3.5 w-3.5 text-primary" /> Agenda
+                          <Calendar className="h-3.5 w-3.5 text-primary" /> Na Agenda
                         </Link>
                       </Button>
                     )}
+
+                    {/* More Actions Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-9 w-9 shrink-0 px-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {onEdit && (
+                          <DropdownMenuItem onClick={() => onEdit(quote)} className="gap-2 cursor-pointer">
+                            <Edit2 className="h-3.5 w-3.5 text-amber-500" /> Editar Orçamento
+                          </DropdownMenuItem>
+                        )}
+                        {quote.status !== 'APROVADO' && (
+                          <DropdownMenuItem onClick={() => onUpdateStatus(quote.id, 'RECUSADO')} className="gap-2 cursor-pointer">
+                            <XCircle className="h-3.5 w-3.5 text-destructive" /> Marcar Recusado
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (confirm(`Excluir o orçamento #${quote.number}?`)) {
+                              onDelete(quote.id)
+                            }
+                          }}
+                          className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir Orçamento
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               )

@@ -52,14 +52,14 @@ export function ServiceTable({
     <div className="space-y-4">
       {/* Category filter tabs & search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {['ALL', 'AUTOMOTIVO', 'RESIDENCIAL', 'COMERCIAL'].map((cat) => (
             <Button
               key={cat}
               variant={selectedCategory === cat ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(cat)}
-              className="text-xs capitalize"
+              className="text-xs capitalize h-8"
             >
               {cat === 'ALL' ? 'Todos os Serviços' : cat.toLowerCase()}
             </Button>
@@ -71,12 +71,12 @@ export function ServiceTable({
             variant="outline"
             size="sm"
             onClick={onOpenCalculator}
-            className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+            className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10 h-8"
           >
-            <Calculator className="h-4 w-4" /> Calculadora de m²
+            <Calculator className="h-4 w-4" /> Calculadora m²
           </Button>
 
-          <Button size="sm" onClick={onAddNew} className="gap-1.5">
+          <Button size="sm" onClick={onAddNew} className="gap-1.5 h-8">
             <Plus className="h-4 w-4" /> Novo Serviço
           </Button>
         </div>
@@ -109,137 +109,220 @@ export function ServiceTable({
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3">Serviço / Película</th>
-                  <th className="px-4 py-3">Categoria</th>
-                  <th className="px-4 py-3">Unidade</th>
-                  <th className="px-4 py-3">Tempo Estimado</th>
-                  <th className="px-4 py-3 text-right">Custo Insumo</th>
-                  <th className="px-4 py-3 text-right">Preço de Venda</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filtered.map((service) => {
-                  const profit =
-                    Number(service.default_price) - Number(service.estimated_cost || 0)
-                  const margin =
-                    Number(service.default_price) > 0
-                      ? (profit / Number(service.default_price)) * 100
-                      : 0
+        <>
+          {/* MOBILE VIEW: Cards */}
+          <div className="grid gap-3 sm:hidden">
+            {filtered.map((service) => {
+              const profit =
+                Number(service.default_price) - Number(service.estimated_cost || 0)
+              const margin =
+                Number(service.default_price) > 0
+                  ? (profit / Number(service.default_price)) * 100
+                  : 0
 
-                  return (
-                    <tr
-                      key={service.id}
-                      className="group transition-colors hover:bg-muted/30"
+              return (
+                <div
+                  key={service.id}
+                  className="rounded-xl border bg-card p-4 shadow-sm space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-foreground text-base">
+                        {service.name}
+                      </h4>
+                      {service.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {service.description}
+                        </p>
+                      )}
+                    </div>
+
+                    <Badge
+                      variant={categoryColors[service.category] || 'default'}
+                      className="text-[11px] shrink-0"
                     >
-                      {/* Serviço / Descrição */}
-                      <td className="px-4 py-3.5 max-w-[280px]">
-                        <div className="font-semibold text-foreground">
-                          {service.name}
-                        </div>
-                        {service.description && (
-                          <div className="text-xs text-muted-foreground line-clamp-1">
-                            {service.description}
-                          </div>
-                        )}
-                      </td>
+                      {service.category}
+                    </Badge>
+                  </div>
 
-                      {/* Categoria */}
-                      <td className="px-4 py-3.5">
-                        <Badge
-                          variant={categoryColors[service.category] || 'default'}
-                          className="text-xs"
-                        >
-                          {service.category}
-                        </Badge>
-                      </td>
+                  <div className="flex items-center justify-between text-xs bg-muted/40 p-2.5 rounded-lg border">
+                    <div>
+                      <span className="text-muted-foreground block text-[10px]">Unidade & Duração</span>
+                      <span className="font-semibold text-foreground">
+                        {service.unit} {service.estimated_duration_minutes ? `• ~${service.estimated_duration_minutes} min` : ''}
+                      </span>
+                    </div>
 
-                      {/* Unidade */}
-                      <td className="px-4 py-3.5">
-                        <span className="text-xs font-mono font-medium text-muted-foreground">
-                          {service.unit}
-                        </span>
-                      </td>
+                    <div className="text-right">
+                      <span className="text-muted-foreground block text-[10px]">Preço de Venda</span>
+                      <span className="text-base font-bold text-primary">
+                        {formatCurrency(Number(service.default_price))}
+                      </span>
+                    </div>
+                  </div>
 
-                      {/* Tempo Estimado */}
-                      <td className="px-4 py-3.5">
-                        {service.estimated_duration_minutes ? (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="h-3.5 w-3.5 text-primary" />
-                            <span>{service.estimated_duration_minutes} min</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </td>
+                  {/* Mobile Action Buttons */}
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onEdit(service)}
+                      className="flex-1 text-xs h-9 gap-1 font-semibold"
+                    >
+                      <Edit className="h-3.5 w-3.5 text-amber-500" /> Editar Serviço
+                    </Button>
 
-                      {/* Custo */}
-                      <td className="px-4 py-3.5 text-right font-mono text-xs text-muted-foreground">
-                        {service.estimated_cost
-                          ? formatCurrency(Number(service.estimated_cost))
-                          : 'R$ 0,00'}
-                      </td>
-
-                      {/* Preço de Venda */}
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="font-bold text-foreground">
-                          {formatCurrency(Number(service.default_price))}
-                        </div>
-                        {margin > 0 && (
-                          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                            Margem: {margin.toFixed(0)}%
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Ações */}
-                      <td className="px-4 py-3.5 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-36">
-                            <DropdownMenuItem
-                              onClick={() => onEdit(service)}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <Edit className="h-4 w-4 text-amber-500" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    `Deseja excluir o serviço "${service.name}"?`
-                                  )
-                                ) {
-                                  onDelete(service.id)
-                                }
-                              }}
-                              className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
-                            >
-                              <Trash2 className="h-4 w-4" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm(`Deseja excluir o serviço "${service.name}"?`)) {
+                          onDelete(service.id)
+                        }
+                      }}
+                      className="text-xs h-9 gap-1 text-destructive hover:bg-destructive/10 border-destructive/20 font-semibold px-3"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Excluir
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          <div className="border-t bg-muted/20 px-4 py-2 text-xs text-muted-foreground">
-            Mostrando {filtered.length} de {services.length} serviço(s)
+
+          {/* DESKTOP VIEW: Table */}
+          <div className="hidden sm:block overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3">Serviço / Película</th>
+                    <th className="px-4 py-3">Categoria</th>
+                    <th className="px-4 py-3">Unidade</th>
+                    <th className="px-4 py-3">Tempo Estimado</th>
+                    <th className="px-4 py-3 text-right">Custo Insumo</th>
+                    <th className="px-4 py-3 text-right">Preço de Venda</th>
+                    <th className="px-4 py-3 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filtered.map((service) => {
+                    const profit =
+                      Number(service.default_price) - Number(service.estimated_cost || 0)
+                    const margin =
+                      Number(service.default_price) > 0
+                        ? (profit / Number(service.default_price)) * 100
+                        : 0
+
+                    return (
+                      <tr
+                        key={service.id}
+                        className="group transition-colors hover:bg-muted/30"
+                      >
+                        {/* Serviço / Descrição */}
+                        <td className="px-4 py-3.5 max-w-[280px]">
+                          <div className="font-semibold text-foreground">
+                            {service.name}
+                          </div>
+                          {service.description && (
+                            <div className="text-xs text-muted-foreground line-clamp-1">
+                              {service.description}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Categoria */}
+                        <td className="px-4 py-3.5">
+                          <Badge
+                            variant={categoryColors[service.category] || 'default'}
+                            className="text-xs"
+                          >
+                            {service.category}
+                          </Badge>
+                        </td>
+
+                        {/* Unidade */}
+                        <td className="px-4 py-3.5">
+                          <span className="text-xs font-mono font-medium text-muted-foreground">
+                            {service.unit}
+                          </span>
+                        </td>
+
+                        {/* Tempo Estimado */}
+                        <td className="px-4 py-3.5">
+                          {service.estimated_duration_minutes ? (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3.5 w-3.5 text-primary" />
+                              <span>{service.estimated_duration_minutes} min</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </td>
+
+                        {/* Custo */}
+                        <td className="px-4 py-3.5 text-right font-mono text-xs text-muted-foreground">
+                          {service.estimated_cost
+                            ? formatCurrency(Number(service.estimated_cost))
+                            : 'R$ 0,00'}
+                        </td>
+
+                        {/* Preço de Venda */}
+                        <td className="px-4 py-3.5 text-right">
+                          <div className="font-bold text-foreground">
+                            {formatCurrency(Number(service.default_price))}
+                          </div>
+                          {margin > 0 && (
+                            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                              Margem: {margin.toFixed(0)}%
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Ações */}
+                        <td className="px-4 py-3.5 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36">
+                              <DropdownMenuItem
+                                onClick={() => onEdit(service)}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <Edit className="h-4 w-4 text-amber-500" /> Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      `Deseja excluir o serviço "${service.name}"?`
+                                    )
+                                  ) {
+                                    onDelete(service.id)
+                                  }
+                                }}
+                                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="border-t bg-muted/20 px-4 py-2 text-xs text-muted-foreground">
+              Mostrando {filtered.length} de {services.length} serviço(s)
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )

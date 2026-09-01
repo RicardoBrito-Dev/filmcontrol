@@ -192,10 +192,10 @@ export function WorkOrderTable({
                   </div>
 
                   {/* Mobile Action Buttons */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t">
-                    <Button asChild size="sm" variant="outline" className="text-xs gap-1 h-8">
+                  <div className="flex items-center gap-1.5 pt-2 border-t">
+                    <Button asChild size="sm" variant="outline" className="flex-1 text-xs gap-1 h-9">
                       <Link href={`/ordens/${order.id}`}>
-                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Detalhes / Fotos
+                        <Eye className="h-3.5 w-3.5 text-blue-500" /> Detalhes
                       </Link>
                     </Button>
 
@@ -203,15 +203,52 @@ export function WorkOrderTable({
                       <Button
                         size="sm"
                         onClick={() => onUpdateStatus(order.id, 'CONCLUIDO')}
-                        className="text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-8"
+                        className="flex-1 text-xs gap-1 bg-emerald-600 hover:bg-emerald-700 font-semibold h-9"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> Concluir OS
                       </Button>
                     ) : (
-                      <Badge variant="success" className="justify-center py-1 text-xs font-semibold h-8">
+                      <Badge variant="success" className="flex-1 justify-center py-2 text-xs font-semibold h-9">
                         Finalizada ✓
                       </Badge>
                     )}
+
+                    {/* More Actions Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-9 w-9 shrink-0 px-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52">
+                        {order.status !== 'EM_INSTALACAO' && (
+                          <DropdownMenuItem onClick={() => onUpdateStatus(order.id, 'EM_INSTALACAO')} className="cursor-pointer">
+                            Marcar Em Instalação
+                          </DropdownMenuItem>
+                        )}
+                        {order.status !== 'AGUARDANDO_PAGAMENTO' && (
+                          <DropdownMenuItem onClick={() => onUpdateStatus(order.id, 'AGUARDANDO_PAGAMENTO')} className="cursor-pointer">
+                            Aguardando Pagamento
+                          </DropdownMenuItem>
+                        )}
+                        {order.status !== 'CANCELADO' && (
+                          <DropdownMenuItem onClick={() => onUpdateStatus(order.id, 'CANCELADO')} className="cursor-pointer text-amber-600">
+                            Cancelar OS
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (confirm(`Excluir a Ordem de Serviço #${order.number}?`)) {
+                              onDelete(order.id)
+                            }
+                          }}
+                          className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir OS
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               )

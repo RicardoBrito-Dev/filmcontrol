@@ -103,139 +103,238 @@ export function InventoryTable({
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3">Produto / Película</th>
-                  <th className="px-4 py-3">Marca / Categoria</th>
-                  <th className="px-4 py-3 text-right">Custo Unitário</th>
-                  <th className="px-4 py-3 text-center">Saldo em Estoque</th>
-                  <th className="px-4 py-3 text-center">Mínimo</th>
-                  <th className="px-4 py-3 text-center">Status</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {filtered.map((product) => {
-                  const isLow = Number(product.quantity) <= Number(product.min_quantity)
+        <>
+          {/* MOBILE VIEW: Cards */}
+          <div className="grid gap-3 sm:hidden">
+            {filtered.map((product) => {
+              const isLow = Number(product.quantity) <= Number(product.min_quantity)
 
-                  return (
-                    <tr
-                      key={product.id}
-                      className="group transition-colors hover:bg-muted/30"
-                    >
-                      {/* Nome e Fornecedor */}
-                      <td className="px-4 py-3.5 max-w-[260px]">
-                        <div className="font-semibold text-foreground">
-                          {product.name}
-                        </div>
-                        {product.supplier && (
-                          <div className="text-xs text-muted-foreground">
-                            Fornecedor: {product.supplier}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Marca e Categoria */}
-                      <td className="px-4 py-3.5">
-                        <div className="text-xs font-medium text-foreground">
-                          {product.brand || '-'}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {product.category || 'Geral'}
-                        </div>
-                      </td>
-
-                      {/* Custo */}
-                      <td className="px-4 py-3.5 text-right font-mono text-xs text-muted-foreground">
-                        {formatCurrency(Number(product.cost))}
-                      </td>
-
-                      {/* Saldo Atual */}
-                      <td className="px-4 py-3.5 text-center">
-                        <span
-                          className={`font-mono text-sm font-bold ${
-                            isLow ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
-                          }`}
-                        >
-                          {product.quantity} {product.unit}
+              return (
+                <div
+                  key={product.id}
+                  className={`rounded-xl border bg-card p-4 shadow-sm space-y-3 ${
+                    isLow ? 'border-rose-500/30' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-foreground text-base">
+                        {product.name}
+                      </h4>
+                      {product.brand && (
+                        <span className="text-xs text-muted-foreground block">
+                          Marca: {product.brand} {product.category ? `• ${product.category}` : ''}
                         </span>
-                      </td>
+                      )}
+                    </div>
 
-                      {/* Mínimo */}
-                      <td className="px-4 py-3.5 text-center font-mono text-xs text-muted-foreground">
-                        {product.min_quantity} {product.unit}
-                      </td>
+                    {isLow ? (
+                      <Badge variant="destructive" className="text-[10px] gap-1 shrink-0">
+                        <AlertTriangle className="h-3 w-3" /> Repor
+                      </Badge>
+                    ) : (
+                      <Badge variant="success" className="text-[10px] shrink-0">
+                        Normal
+                      </Badge>
+                    )}
+                  </div>
 
-                      {/* Status */}
-                      <td className="px-4 py-3.5 text-center">
-                        {isLow ? (
-                          <Badge variant="destructive" className="gap-1 text-xs">
-                            <AlertTriangle className="h-3 w-3" /> Repor
-                          </Badge>
-                        ) : (
-                          <Badge variant="success" className="text-xs">
-                            Normal
-                          </Badge>
-                        )}
-                      </td>
+                  <div className="grid grid-cols-2 gap-2 text-xs bg-muted/40 p-2.5 rounded-lg border">
+                    <div>
+                      <span className="text-muted-foreground block text-[10px]">Saldo Atual</span>
+                      <span
+                        className={`font-mono text-base font-bold ${
+                          isLow ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+                        }`}
+                      >
+                        {product.quantity} {product.unit}
+                      </span>
+                    </div>
 
-                      {/* Ações */}
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onMoveStock(product)}
-                            className="h-8 text-xs gap-1"
+                    <div className="text-right">
+                      <span className="text-muted-foreground block text-[10px]">Mínimo / Custo</span>
+                      <span className="text-xs font-mono font-medium text-foreground block">
+                        Min: {product.min_quantity} {product.unit}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {formatCurrency(Number(product.cost))}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Mobile Action Buttons */}
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onMoveStock(product)}
+                      className="flex-1 text-xs h-9 gap-1 font-semibold"
+                    >
+                      <ArrowUpDown className="h-3.5 w-3.5 text-primary" /> Movimentar
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onEdit(product)}
+                      className="text-xs h-9 gap-1 px-3 font-semibold"
+                    >
+                      <Edit className="h-3.5 w-3.5 text-amber-500" /> Editar
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm(`Deseja excluir "${product.name}" do estoque?`)) {
+                          onDelete(product.id)
+                        }
+                      }}
+                      className="text-xs h-9 gap-1 text-destructive hover:bg-destructive/10 border-destructive/20 font-semibold px-3"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* DESKTOP VIEW: Table */}
+          <div className="hidden sm:block overflow-hidden rounded-xl border bg-card shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3">Produto / Película</th>
+                    <th className="px-4 py-3">Marca / Categoria</th>
+                    <th className="px-4 py-3 text-right">Custo Unitário</th>
+                    <th className="px-4 py-3 text-center">Saldo em Estoque</th>
+                    <th className="px-4 py-3 text-center">Mínimo</th>
+                    <th className="px-4 py-3 text-center">Status</th>
+                    <th className="px-4 py-3 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filtered.map((product) => {
+                    const isLow = Number(product.quantity) <= Number(product.min_quantity)
+
+                    return (
+                      <tr
+                        key={product.id}
+                        className="group transition-colors hover:bg-muted/30"
+                      >
+                        {/* Nome e Fornecedor */}
+                        <td className="px-4 py-3.5 max-w-[260px]">
+                          <div className="font-semibold text-foreground">
+                            {product.name}
+                          </div>
+                          {product.supplier && (
+                            <div className="text-xs text-muted-foreground">
+                              Fornecedor: {product.supplier}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Marca e Categoria */}
+                        <td className="px-4 py-3.5">
+                          <div className="text-xs font-medium text-foreground">
+                            {product.brand || '-'}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {product.category || 'Geral'}
+                          </div>
+                        </td>
+
+                        {/* Custo */}
+                        <td className="px-4 py-3.5 text-right font-mono text-xs text-muted-foreground">
+                          {formatCurrency(Number(product.cost))}
+                        </td>
+
+                        {/* Saldo Atual */}
+                        <td className="px-4 py-3.5 text-center">
+                          <span
+                            className={`font-mono text-sm font-bold ${
+                              isLow ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'
+                            }`}
                           >
-                            <ArrowUpDown className="h-3.5 w-3.5 text-primary" /> Movimentar
-                          </Button>
+                            {product.quantity} {product.unit}
+                          </span>
+                        </td>
 
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-36">
-                              <DropdownMenuItem
-                                onClick={() => onEdit(product)}
-                                className="flex items-center gap-2 cursor-pointer"
-                              >
-                                <Edit className="h-4 w-4 text-amber-500" /> Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  if (
-                                    confirm(
-                                      `Deseja excluir "${product.name}" do estoque?`
-                                    )
-                                  ) {
-                                    onDelete(product.id)
-                                  }
-                                }}
-                                className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
-                              >
-                                <Trash2 className="h-4 w-4" /> Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        {/* Mínimo */}
+                        <td className="px-4 py-3.5 text-center font-mono text-xs text-muted-foreground">
+                          {product.min_quantity} {product.unit}
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-4 py-3.5 text-center">
+                          {isLow ? (
+                            <Badge variant="destructive" className="gap-1 text-xs">
+                              <AlertTriangle className="h-3 w-3" /> Repor
+                            </Badge>
+                          ) : (
+                            <Badge variant="success" className="text-xs">
+                              Normal
+                            </Badge>
+                          )}
+                        </td>
+
+                        {/* Ações */}
+                        <td className="px-4 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onMoveStock(product)}
+                              className="h-8 text-xs gap-1"
+                            >
+                              <ArrowUpDown className="h-3.5 w-3.5 text-primary" /> Movimentar
+                            </Button>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-36">
+                                <DropdownMenuItem
+                                  onClick={() => onEdit(product)}
+                                  className="flex items-center gap-2 cursor-pointer"
+                                >
+                                  <Edit className="h-4 w-4 text-amber-500" /> Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (
+                                      confirm(
+                                        `Deseja excluir "${product.name}" do estoque?`
+                                      )
+                                    ) {
+                                      onDelete(product.id)
+                                    }
+                                  }}
+                                  className="flex items-center gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="border-t bg-muted/20 px-4 py-2 text-xs text-muted-foreground">
+              Mostrando {filtered.length} de {products.length} item(ns)
+            </div>
           </div>
-          <div className="border-t bg-muted/20 px-4 py-2 text-xs text-muted-foreground">
-            Mostrando {filtered.length} de {products.length} item(ns)
-          </div>
-        </div>
+        </>
       )}
     </div>
   )

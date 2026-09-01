@@ -234,43 +234,49 @@ export function CustomerTable({
                   </div>
 
                   {/* Mobile Action Buttons */}
-                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t text-xs">
-                    <Button asChild size="sm" variant="outline" className="text-xs px-2 h-8">
+                  <div className="flex items-center gap-1.5 pt-2 border-t">
+                    <Button asChild size="sm" variant="outline" className="flex-1 text-xs h-9 gap-1">
                       <Link href={`/clientes/${customer.id}`}>
                         <Eye className="h-3.5 w-3.5 text-blue-500" /> Perfil
                       </Link>
                     </Button>
 
-                    {whatsappUrl ? (
+                    {whatsappUrl && (
                       <Button
                         asChild
                         size="sm"
                         variant="outline"
-                        className="text-xs px-2 h-8 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                        className="flex-1 text-xs h-9 gap-1 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
                       >
                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                           <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                         </a>
                       </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onEdit(customer)}
-                        className="text-xs px-2 h-8"
-                      >
-                        <Edit className="h-3.5 w-3.5 text-amber-500" /> Editar
-                      </Button>
                     )}
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onAddVehicle(customer)}
-                      className="text-xs px-2 h-8 gap-1"
-                    >
-                      <Car className="h-3.5 w-3.5 text-primary" /> +Carro
-                    </Button>
+                    {/* More Actions dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-9 w-9 shrink-0 px-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem onClick={() => onEdit(customer)} className="gap-2 cursor-pointer">
+                          <Edit className="h-3.5 w-3.5 text-amber-500" /> Editar Cliente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onAddVehicle(customer)} className="gap-2 cursor-pointer">
+                          <Car className="h-3.5 w-3.5 text-primary" /> Adicionar Veículo
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => onDelete(customer.id)}
+                          className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir Cliente
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               )
