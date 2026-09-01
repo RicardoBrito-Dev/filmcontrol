@@ -112,11 +112,11 @@ Ficamos à disposição para agendar a sua instalação!`
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
           <Button
             variant="outline"
             onClick={() => setIsEditModalOpen(true)}
-            className="gap-2 font-semibold"
+            className="gap-2 font-semibold justify-center"
           >
             <Edit2 className="h-4 w-4 text-amber-500" /> Editar Orçamento
           </Button>
@@ -125,7 +125,7 @@ Ficamos à disposição para agendar a sua instalação!`
             <Button
               asChild
               variant="outline"
-              className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+              className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 justify-center"
             >
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-4 w-4" /> Enviar no WhatsApp
@@ -133,7 +133,7 @@ Ficamos à disposição para agendar a sua instalação!`
             </Button>
           )}
 
-          <Button variant="outline" onClick={handlePrint} className="gap-2">
+          <Button variant="outline" onClick={handlePrint} className="gap-2 justify-center">
             <Printer className="h-4 w-4" /> Imprimir / PDF
           </Button>
 
@@ -141,13 +141,13 @@ Ficamos à disposição para agendar a sua instalação!`
             <Button
               onClick={handleApprove}
               disabled={isApproving}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 font-bold"
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 font-bold justify-center"
             >
               <CheckCircle2 className="h-4 w-4" />
               {isApproving ? 'Aprovando...' : 'Aprovar & Agendar na Agenda'}
             </Button>
           ) : (
-            <Button asChild className="gap-2 bg-primary font-bold">
+            <Button asChild className="gap-2 bg-primary font-bold justify-center">
               <Link href="/agenda">
                 <Calendar className="h-4 w-4" /> Ver na Agenda
               </Link>
@@ -157,7 +157,7 @@ Ficamos à disposição para agendar a sua instalação!`
       </div>
 
       {/* Printable Document Sheet */}
-      <div className="rounded-xl border bg-card p-8 shadow-sm print:border-none print:shadow-none print:p-0 max-w-4xl mx-auto space-y-8">
+      <div className="rounded-xl border bg-card p-4 sm:p-8 shadow-sm print:border-none print:shadow-none print:p-0 max-w-4xl mx-auto space-y-6 sm:space-y-8">
         {/* Document Header */}
         <div className="flex justify-between items-start border-b pb-6">
           <div className="space-y-2">

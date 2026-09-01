@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -47,7 +47,7 @@ export function TransactionFormModal({
     resolver: zodResolver(financialTransactionSchema),
     defaultValues: {
       description: '',
-      category: 'Vendas de Películas',
+      category: 'Vendas de PelÃ­culas',
       amount: 0,
       type: 'ENTRADA',
       method: 'PIX',
@@ -64,7 +64,7 @@ export function TransactionFormModal({
     try {
       const created = await financialService.create(data)
       toast({
-        title: 'Lançamento financeiro registrado!',
+        title: 'LanÃ§amento financeiro registrado!',
         description: `${created.description} salvo com sucesso.`,
         variant: 'success' as 'default',
       })
@@ -72,7 +72,7 @@ export function TransactionFormModal({
       onSuccess(created)
       onOpenChange(false)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao salvar lançamento'
+      const message = error instanceof Error ? error.message : 'Erro ao salvar lanÃ§amento'
       toast({ title: 'Erro', description: message, variant: 'destructive' })
     } finally {
       setLoading(false)
@@ -81,20 +81,20 @@ export function TransactionFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-lg p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-primary" /> Novo Lançamento Financeiro
+            <DollarSign className="h-5 w-5 text-primary" /> Novo LanÃ§amento Financeiro
           </DialogTitle>
           <DialogDescription>
-            Registre receitas (entradas) e despesas (saídas) para controle de fluxo de caixa.
+            Registre receitas (entradas) e despesas (saÃ­das) para controle de fluxo de caixa.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Tipo Entrada / Saída */}
+          {/* Tipo Entrada / SaÃ­da */}
           <div className="space-y-2">
-            <Label>Tipo de Lançamento</Label>
+            <Label>Tipo de LanÃ§amento</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -110,20 +110,20 @@ export function TransactionFormModal({
                 onClick={() => setValue('type', 'SAIDA')}
                 className="gap-1.5"
               >
-                <ArrowUpRight className="h-4 w-4 text-rose-500" /> Despesa (Saída)
+                <ArrowUpRight className="h-4 w-4 text-rose-500" /> Despesa (SaÃ­da)
               </Button>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="tx-desc">
-              Descrição <span className="text-destructive">*</span>
+              DescriÃ§Ã£o <span className="text-destructive">*</span>
             </Label>
             <Input
               id="tx-desc"
               placeholder={
                 currentType === 'ENTRADA'
-                  ? 'Ex: Instalação película Onix / Sinal cliente'
+                  ? 'Ex: InstalaÃ§Ã£o pelÃ­cula Onix / Sinal cliente'
                   : 'Ex: Compra de bobinas de insulfilm / Aluguel'
               }
               {...register('description')}
@@ -144,9 +144,9 @@ export function TransactionFormModal({
               >
                 {currentType === 'ENTRADA' ? (
                   <>
-                    <option value="Vendas de Películas">Vendas de Películas</option>
-                    <option value="Serviços Residenciais">Serviços Residenciais</option>
-                    <option value="Serviços Comerciais">Serviços Comerciais</option>
+                    <option value="Vendas de PelÃ­culas">Vendas de PelÃ­culas</option>
+                    <option value="ServiÃ§os Residenciais">ServiÃ§os Residenciais</option>
+                    <option value="ServiÃ§os Comerciais">ServiÃ§os Comerciais</option>
                     <option value="Outras Receitas">Outras Receitas</option>
                   </>
                 ) : (
@@ -189,11 +189,11 @@ export function TransactionFormModal({
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="PIX">PIX</option>
-                <option value="CREDITO">Cartão de Crédito</option>
-                <option value="DEBITO">Cartão de Débito</option>
+                <option value="CREDITO">CartÃ£o de CrÃ©dito</option>
+                <option value="DEBITO">CartÃ£o de DÃ©bito</option>
                 <option value="DINHEIRO">Dinheiro</option>
-                <option value="BOLETO">Boleto Bancário</option>
-                <option value="TRANSFERENCIA">Transferência</option>
+                <option value="BOLETO">Boleto BancÃ¡rio</option>
+                <option value="TRANSFERENCIA">TransferÃªncia</option>
               </select>
             </div>
 
@@ -204,24 +204,24 @@ export function TransactionFormModal({
                 {...register('status')}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="PAGO">Pago / Concluído</option>
+                <option value="PAGO">Pago / ConcluÃ­do</option>
                 <option value="PENDENTE">Pendente / A Pagar / A Receber</option>
                 <option value="VENCIDO">Vencido</option>
               </select>
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="tx-date">Data de Competência / Vencimento</Label>
+              <Label htmlFor="tx-date">Data de CompetÃªncia / Vencimento</Label>
               <Input id="tx-date" type="date" {...register('reference_date')} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tx-notes">Observações</Label>
+            <Label htmlFor="tx-notes">ObservaÃ§Ãµes</Label>
             <textarea
               id="tx-notes"
               rows={2}
-              placeholder="Número de nota fiscal, comprovante ou observação..."
+              placeholder="NÃºmero de nota fiscal, comprovante ou observaÃ§Ã£o..."
               {...register('notes')}
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -243,7 +243,7 @@ export function TransactionFormModal({
                   Salvando...
                 </>
               ) : (
-                'Salvar Lançamento'
+                'Salvar LanÃ§amento'
               )}
             </Button>
           </DialogFooter>
@@ -252,3 +252,4 @@ export function TransactionFormModal({
     </Dialog>
   )
 }
+

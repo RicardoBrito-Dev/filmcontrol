@@ -81,34 +81,34 @@ export default function DashboardPage() {
   }, [loadDashboard])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Top Header & Fast Action Buttons */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
             Painel Geral
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Visão consolidada em tempo real da sua loja de películas automotivas e residenciais.
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Visão consolidada em tempo real da sua loja de películas.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => setIsVehicleModalOpen(true)}
-            className="gap-1.5"
+            className="gap-1.5 flex-1 sm:flex-none h-9 text-sm"
           >
             <Car className="h-4 w-4" /> Novo Veículo
           </Button>
-          <Button onClick={() => setIsCustomerModalOpen(true)} className="gap-1.5">
+          <Button onClick={() => setIsCustomerModalOpen(true)} className="gap-1.5 flex-1 sm:flex-none h-9 text-sm">
             <Plus className="h-4 w-4" /> Novo Cliente
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* KPI Cards Grid — 2 cols on mobile, 4 on desktop */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <KPICard
           title="Faturamento do Mês"
           value={formatCurrency(metrics?.monthlyRevenue || 0)}
@@ -178,8 +178,8 @@ export default function DashboardPage() {
       {/* Agenda de Hoje Widget */}
       <TodayAgenda items={agendaItems} />
 
-      {/* Interactive Charts Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {/* Interactive Charts Grid — full-width on mobile, 3-col on desktop */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <RevenueChart data={revenueData} />
         <CategoryChart data={categoryData} />
         <PaymentChart data={paymentData} />

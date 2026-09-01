@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -46,7 +46,7 @@ export function ServiceFormModal({
       name: '',
       category: 'AUTOMOTIVO',
       description: '',
-      unit: 'veículo',
+      unit: 'veÃ­culo',
       default_price: 0,
       estimated_cost: 0,
       estimated_duration_minutes: 60,
@@ -71,7 +71,7 @@ export function ServiceFormModal({
         name: '',
         category: 'AUTOMOTIVO',
         description: '',
-        unit: 'veículo',
+        unit: 'veÃ­culo',
         default_price: 0,
         estimated_cost: 0,
         estimated_duration_minutes: 60,
@@ -86,7 +86,7 @@ export function ServiceFormModal({
       if (serviceToEdit) {
         const updated = await serviceService.update(serviceToEdit.id, data)
         toast({
-          title: 'Serviço atualizado!',
+          title: 'ServiÃ§o atualizado!',
           description: `${updated.name} foi salvo.`,
           variant: 'success' as 'default',
         })
@@ -94,15 +94,15 @@ export function ServiceFormModal({
       } else {
         const created = await serviceService.create(data)
         toast({
-          title: 'Serviço adicionado!',
-          description: `${created.name} disponível no catálogo.`,
+          title: 'ServiÃ§o adicionado!',
+          description: `${created.name} disponÃ­vel no catÃ¡logo.`,
           variant: 'success' as 'default',
         })
         onSuccess(created)
       }
       onOpenChange(false)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao salvar serviço'
+      const message = error instanceof Error ? error.message : 'Erro ao salvar serviÃ§o'
       toast({ title: 'Erro ao salvar', description: message, variant: 'destructive' })
     } finally {
       setLoading(false)
@@ -111,25 +111,25 @@ export function ServiceFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-lg p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
-            {serviceToEdit ? 'Editar Serviço' : 'Novo Serviço no Catálogo'}
+            {serviceToEdit ? 'Editar ServiÃ§o' : 'Novo ServiÃ§o no CatÃ¡logo'}
           </DialogTitle>
           <DialogDescription>
-            Configure películas, opções de aplicação, preços sugeridos e tempo estimado.
+            Configure pelÃ­culas, opÃ§Ãµes de aplicaÃ§Ã£o, preÃ§os sugeridos e tempo estimado.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">
-              Nome do Serviço / Película <span className="text-destructive">*</span>
+              Nome do ServiÃ§o / PelÃ­cula <span className="text-destructive">*</span>
             </Label>
             <Input
               id="name"
-              placeholder="Ex: Película Nano Cerâmica / Jateado Sacada"
+              placeholder="Ex: PelÃ­cula Nano CerÃ¢mica / Jateado Sacada"
               {...register('name')}
               className={errors.name ? 'border-destructive' : ''}
             />
@@ -155,14 +155,14 @@ export function ServiceFormModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="unit">Unidade de Cobrança</Label>
+              <Label htmlFor="unit">Unidade de CobranÃ§a</Label>
               <select
                 id="unit"
                 {...register('unit')}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="veículo">Por Veículo</option>
-                <option value="m²">Por Metro Quadrado (m²)</option>
+                <option value="veÃ­culo">Por VeÃ­culo</option>
+                <option value="mÂ²">Por Metro Quadrado (mÂ²)</option>
                 <option value="un">Por Unidade / Vidro</option>
                 <option value="hora">Por Hora</option>
               </select>
@@ -170,7 +170,7 @@ export function ServiceFormModal({
 
             <div className="space-y-2">
               <Label htmlFor="default_price">
-                Preço Padrão de Venda (R$) <span className="text-destructive">*</span>
+                PreÃ§o PadrÃ£o de Venda (R$) <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="default_price"
@@ -198,7 +198,7 @@ export function ServiceFormModal({
 
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="estimated_duration_minutes">
-                Tempo Estimado de Aplicação (Minutos)
+                Tempo Estimado de AplicaÃ§Ã£o (Minutos)
               </Label>
               <Input
                 id="estimated_duration_minutes"
@@ -211,11 +211,11 @@ export function ServiceFormModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descrição / Benefícios ao Cliente</Label>
+            <Label htmlFor="description">DescriÃ§Ã£o / BenefÃ­cios ao Cliente</Label>
             <textarea
               id="description"
               rows={2}
-              placeholder="Ex: Alta proteção solar UV 99%, retenção de calor e garantia de 3 anos..."
+              placeholder="Ex: Alta proteÃ§Ã£o solar UV 99%, retenÃ§Ã£o de calor e garantia de 3 anos..."
               {...register('description')}
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -237,9 +237,9 @@ export function ServiceFormModal({
                   Salvando...
                 </>
               ) : serviceToEdit ? (
-                'Salvar Alterações'
+                'Salvar AlteraÃ§Ãµes'
               ) : (
-                'Adicionar ao Catálogo'
+                'Adicionar ao CatÃ¡logo'
               )}
             </Button>
           </DialogFooter>
@@ -248,3 +248,4 @@ export function ServiceFormModal({
     </Dialog>
   )
 }
+

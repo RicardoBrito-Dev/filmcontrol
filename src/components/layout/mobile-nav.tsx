@@ -17,6 +17,7 @@ import {
   Settings,
   X,
   Film,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -26,18 +27,33 @@ interface MobileNavProps {
   onClose: () => void
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Agenda', href: '/agenda', icon: Calendar },
-  { name: 'Orçamentos', href: '/orcamentos', icon: FileText },
-  { name: 'Ordens de Serviço', href: '/ordens', icon: ClipboardList },
-  { name: 'Clientes', href: '/clientes', icon: Users },
-  { name: 'Veículos', href: '/veiculos', icon: Car },
-  { name: 'Serviços', href: '/servicos', icon: Package },
-  { name: 'Estoque', href: '/estoque', icon: Archive },
-  { name: 'Financeiro', href: '/financeiro', icon: DollarSign },
-  { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
-  { name: 'Configurações', href: '/configuracoes', icon: Settings },
+const navGroups = [
+  {
+    label: 'Principal',
+    items: [
+      { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+      { name: 'Agenda', href: '/agenda', icon: Calendar },
+      { name: 'Orçamentos', href: '/orcamentos', icon: FileText },
+      { name: 'Ordens de Serviço', href: '/ordens', icon: ClipboardList },
+    ],
+  },
+  {
+    label: 'Cadastros',
+    items: [
+      { name: 'Clientes', href: '/clientes', icon: Users },
+      { name: 'Veículos', href: '/veiculos', icon: Car },
+      { name: 'Catálogo de Serviços', href: '/servicos', icon: Package },
+    ],
+  },
+  {
+    label: 'Gestão',
+    items: [
+      { name: 'Estoque', href: '/estoque', icon: Archive },
+      { name: 'Financeiro', href: '/financeiro', icon: DollarSign },
+      { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
+      { name: 'Configurações', href: '/configuracoes', icon: Settings },
+    ],
+  },
 ]
 
 export function MobileNav({ open, onClose }: MobileNavProps) {
@@ -54,67 +70,89 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
     }
   }, [open])
 
+  // Close on route change
+  useEffect(() => {
+    onClose()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-50 md:hidden">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Drawer */}
-      <div className="absolute left-0 top-0 h-full w-72 bg-card border-r flex flex-col animate-in slide-in-from-left duration-300">
-        {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b px-4">
+      {/* Drawer — full height, left side */}
+      <div className="absolute left-0 top-0 h-full w-[76vw] max-w-[300px] bg-card border-r flex flex-col animate-in slide-in-from-left duration-250 shadow-2xl">
+        {/* Logo Header */}
+        <div className="flex h-16 items-center justify-between border-b px-4 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-sm">
               <Film className="h-4 w-4 text-primary-foreground" />
             </div>
             <div className="flex flex-col leading-none">
               <span className="text-base font-bold tracking-tight">
                 FILM<span className="text-primary">CONTROL</span>
               </span>
+              <span className="text-[10px] text-muted-foreground tracking-wide">Instalação de Películas</span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-full">
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2 py-4">
-          {navigation.map((item) => {
-            const isActive =
-              item.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(item.href)
+        {/* Nav groups */}
+        <nav className="flex flex-1 flex-col overflow-y-auto py-3 px-2">
+          {navGroups.map((group, gi) => (
+            <div key={gi} className="mb-1">
+              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                {group.label}
+              </p>
+              {group.items.map((item) => {
+                const isActive =
+                  item.href === '/'
+                    ? pathname === '/'
+                    : pathname.startsWith(item.href)
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                  'hover:bg-accent hover:text-accent-foreground',
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground'
-                )}
-              >
-                <item.icon
-                  className={cn(
-                    'h-4 w-4 shrink-0',
-                    isActive ? 'text-primary' : 'text-muted-foreground'
-                  )}
-                />
-                <span>{item.name}</span>
-              </Link>
-            )
-          })}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all active:scale-98',
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    )}
+                  >
+                    <item.icon
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        isActive ? 'text-primary' : 'text-muted-foreground'
+                      )}
+                    />
+                    <span className="flex-1">{item.name}</span>
+                    {isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          ))}
         </nav>
+
+        {/* Footer */}
+        <div className="border-t p-3 shrink-0" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+          <p className="text-center text-[10px] text-muted-foreground">
+            FILMCONTROL v1.0 • Gestão de Películas
+          </p>
+        </div>
       </div>
     </div>
   )

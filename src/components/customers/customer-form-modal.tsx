@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -58,7 +58,7 @@ export function CustomerFormModal({
   // Tipo de Atendimento: 'AUTOMOTIVO' | 'RESIDENCIAL'
   const [serviceType, setServiceType] = useState<'AUTOMOTIVO' | 'RESIDENCIAL'>('AUTOMOTIVO')
 
-  // Veículo Express
+  // VeÃ­culo Express
   const [vBrand, setVBrand] = useState('')
   const [vModel, setVModel] = useState('')
   const [vPlate, setVPlate] = useState('')
@@ -153,7 +153,7 @@ export function CustomerFormModal({
           setValue('city', data.localidade || '', { shouldValidate: true })
           setValue('state', data.uf || '', { shouldValidate: true })
           toast({
-            title: 'Endereço encontrado!',
+            title: 'EndereÃ§o encontrado!',
             description: `${data.logradouro}, ${data.bairro} - ${data.localidade}/${data.uf}`,
           })
         }
@@ -193,10 +193,10 @@ export function CustomerFormModal({
 
         toast({
           title: vehiclePayload
-            ? 'Cliente e Veículo cadastrados!'
+            ? 'Cliente e VeÃ­culo cadastrados!'
             : 'Cliente cadastrado com sucesso!',
           description: vehiclePayload
-            ? `${created.name} e o veículo ${vBrand} ${vModel} foram cadastrados juntos.`
+            ? `${created.name} e o veÃ­culo ${vBrand} ${vModel} foram cadastrados juntos.`
             : `${created.name} foi cadastrado para atendimento residencial/comercial.`,
           variant: 'success' as 'default',
         })
@@ -217,14 +217,14 @@ export function CustomerFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-2xl p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <User className="h-5 w-5 text-primary" />
             {customerToEdit ? 'Editar Cliente' : 'Novo Cliente'}
           </DialogTitle>
           <DialogDescription>
-            Escolha o tipo de atendimento para preencher apenas o que interessa de forma ultra-rápida.
+            Escolha o tipo de atendimento para preencher apenas o que interessa de forma ultra-rÃ¡pida.
           </DialogDescription>
         </DialogHeader>
 
@@ -242,7 +242,7 @@ export function CustomerFormModal({
                 }`}
               >
                 <Car className="h-4 w-4 text-primary" />
-                <span>🚗 Automotivo (Veículo)</span>
+                <span>ðŸš— Automotivo (VeÃ­culo)</span>
               </button>
 
               <button
@@ -255,7 +255,7 @@ export function CustomerFormModal({
                 }`}
               >
                 <Building2 className="h-4 w-4 text-blue-500" />
-                <span>🏠 Residencial / Comercial</span>
+                <span>ðŸ  Residencial / Comercial</span>
               </button>
             </div>
           )}
@@ -266,17 +266,17 @@ export function CustomerFormModal({
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5 text-primary" /> Dados do Cliente
               </span>
-              <span className="text-[11px] text-muted-foreground">* Obrigatórios</span>
+              <span className="text-[11px] text-muted-foreground">* ObrigatÃ³rios</span>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1 sm:col-span-2">
                 <Label htmlFor="name" className="text-xs font-semibold">
-                  Nome Completo / Razão Social *
+                  Nome Completo / RazÃ£o Social *
                 </Label>
                 <Input
                   id="name"
-                  placeholder="Ex: João da Silva / Loja XYZ"
+                  placeholder="Ex: JoÃ£o da Silva / Loja XYZ"
                   {...register('name')}
                   className={`h-9 text-sm ${errors.name ? 'border-destructive' : ''}`}
                 />
@@ -314,12 +314,12 @@ export function CustomerFormModal({
             </div>
           </div>
 
-          {/* Se AUTOMOTIVO: Exibe Campos do Veículo Diretamente */}
+          {/* Se AUTOMOTIVO: Exibe Campos do VeÃ­culo Diretamente */}
           {serviceType === 'AUTOMOTIVO' && !customerToEdit && (
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-3 animate-in fade-in duration-200">
               <div className="flex items-center justify-between border-b border-primary/10 pb-1.5">
                 <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Car className="h-4 w-4 text-primary" /> Dados do Veículo (Cadastrado Junto)
+                  <Car className="h-4 w-4 text-primary" /> Dados do VeÃ­culo (Cadastrado Junto)
                 </span>
                 <span className="text-[10px] bg-primary/15 text-primary font-mono px-2 py-0.5 rounded-full font-semibold">
                   1-Click
@@ -413,7 +413,7 @@ export function CustomerFormModal({
                     <option value="SUV">SUV / Crossover</option>
                     <option value="PICKUP">Pickup / Caminhonete</option>
                     <option value="MOTO">Moto</option>
-                    <option value="CAMINHAO">Caminhão / Van</option>
+                    <option value="CAMINHAO">CaminhÃ£o / Van</option>
                     <option value="OUTRO">Outro</option>
                   </select>
                 </div>
@@ -421,12 +421,12 @@ export function CustomerFormModal({
             </div>
           )}
 
-          {/* Se RESIDENCIAL ou Editando: Exibe Campos de Endereço */}
+          {/* Se RESIDENCIAL ou Editando: Exibe Campos de EndereÃ§o */}
           {(serviceType === 'RESIDENCIAL' || customerToEdit) && (
             <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3.5 space-y-3 animate-in fade-in duration-200">
               <div className="flex items-center justify-between border-b border-blue-500/10 pb-1.5">
                 <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 text-blue-500" /> Endereço do Imóvel (Para Aplicação no Local)
+                  <MapPin className="h-4 w-4 text-blue-500" /> EndereÃ§o do ImÃ³vel (Para AplicaÃ§Ã£o no Local)
                 </span>
                 <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
                   Busca por CEP
@@ -466,7 +466,7 @@ export function CustomerFormModal({
 
                 <div className="space-y-1">
                   <Label htmlFor="address_number" className="text-xs font-semibold">
-                    Número
+                    NÃºmero
                   </Label>
                   <Input
                     id="address_number"
@@ -506,7 +506,7 @@ export function CustomerFormModal({
                   </Label>
                   <Input
                     id="city"
-                    placeholder="Ex: São Paulo"
+                    placeholder="Ex: SÃ£o Paulo"
                     {...register('city')}
                     className="h-9 text-sm bg-background"
                   />
@@ -545,7 +545,7 @@ export function CustomerFormModal({
                   Salvando...
                 </>
               ) : customerToEdit ? (
-                'Salvar Alterações'
+                'Salvar AlteraÃ§Ãµes'
               ) : (
                 <>
                   <Check className="h-4 w-4" /> Cadastrar Cliente
@@ -558,3 +558,4 @@ export function CustomerFormModal({
     </Dialog>
   )
 }
+

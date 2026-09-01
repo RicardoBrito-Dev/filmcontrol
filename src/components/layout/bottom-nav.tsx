@@ -7,7 +7,8 @@ import {
   Calendar,
   FileText,
   ClipboardList,
-  Menu,
+  Users,
+  MoreHorizontal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -20,13 +21,14 @@ const bottomNavItems = [
   { name: 'Agenda', href: '/agenda', icon: Calendar },
   { name: 'Orçamentos', href: '/orcamentos', icon: FileText },
   { name: 'Ordens', href: '/ordens', icon: ClipboardList },
+  { name: 'Clientes', href: '/clientes', icon: Users },
 ]
 
 export function BottomNav({ onOpenMenu }: BottomNavProps) {
   const pathname = usePathname()
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t bg-card/95 backdrop-blur-md px-2 md:hidden shadow-lg safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch justify-around border-t bg-card/98 backdrop-blur-md md:hidden shadow-[0_-1px_12px_rgba(0,0,0,0.08)]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'calc(56px + env(safe-area-inset-bottom, 0px))' }}>
       {bottomNavItems.map((item) => {
         const isActive =
           item.href === '/'
@@ -38,35 +40,35 @@ export function BottomNav({ onOpenMenu }: BottomNavProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex flex-col items-center justify-center gap-1 py-1 px-3 text-[11px] font-medium transition-all rounded-xl active:scale-95',
+              'flex flex-1 flex-col items-center justify-center gap-0.5 pt-2 text-[10px] font-medium transition-all active:scale-90 select-none',
               isActive
-                ? 'text-primary font-bold'
-                : 'text-muted-foreground hover:text-foreground'
+                ? 'text-primary'
+                : 'text-muted-foreground'
             )}
           >
             <div
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
-                isActive && 'bg-primary/15 text-primary'
+                'flex h-7 w-12 items-center justify-center rounded-full transition-all duration-200',
+                isActive && 'bg-primary/12'
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className={cn('h-[18px] w-[18px] transition-all', isActive && 'scale-110')} />
             </div>
-            <span>{item.name}</span>
+            <span className={cn('text-[9.5px] tracking-tight leading-tight', isActive && 'font-bold')}>{item.name}</span>
           </Link>
         )
       })}
 
-      {/* Botão Menu / Mais */}
+      {/* Botão Mais */}
       <button
         type="button"
         onClick={onOpenMenu}
-        className="flex flex-col items-center justify-center gap-1 py-1 px-3 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-all active:scale-95"
+        className="flex flex-1 flex-col items-center justify-center gap-0.5 pt-2 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-all active:scale-90 select-none"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full">
-          <Menu className="h-4 w-4" />
+        <div className="flex h-7 w-12 items-center justify-center rounded-full">
+          <MoreHorizontal className="h-[18px] w-[18px]" />
         </div>
-        <span>Menu</span>
+        <span className="text-[9.5px] tracking-tight leading-tight">Mais</span>
       </button>
     </div>
   )

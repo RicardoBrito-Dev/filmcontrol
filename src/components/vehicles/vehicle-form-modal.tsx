@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -46,7 +46,7 @@ const COMMON_BRANDS = [
   'Caoa Chery',
   'Volvo',
   'Peugeot',
-  'Citroën',
+  'CitroÃ«n',
   'RAM',
   'Porsche',
   'Outra',
@@ -57,7 +57,7 @@ const VEHICLE_TYPES = [
   { value: 'SUV', label: 'SUV' },
   { value: 'PICKUP', label: 'Pickup / Caminhonete' },
   { value: 'MOTO', label: 'Moto' },
-  { value: 'CAMINHAO', label: 'Caminhão / Van' },
+  { value: 'CAMINHAO', label: 'CaminhÃ£o / Van' },
   { value: 'OUTRO', label: 'Outro' },
 ]
 
@@ -133,7 +133,7 @@ export function VehicleFormModal({
       if (vehicleToEdit) {
         const updated = await vehicleService.update(vehicleToEdit.id, data)
         toast({
-          title: 'Veículo atualizado!',
+          title: 'VeÃ­culo atualizado!',
           description: `${updated.brand} ${updated.model} salvo com sucesso.`,
           variant: 'success' as 'default',
         })
@@ -141,7 +141,7 @@ export function VehicleFormModal({
       } else {
         const created = await vehicleService.create(data)
         toast({
-          title: 'Veículo cadastrado!',
+          title: 'VeÃ­culo cadastrado!',
           description: `${created.brand} ${created.model} vinculado ao cliente.`,
           variant: 'success' as 'default',
         })
@@ -149,7 +149,7 @@ export function VehicleFormModal({
       }
       onOpenChange(false)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao salvar veículo'
+      const message = error instanceof Error ? error.message : 'Erro ao salvar veÃ­culo'
       toast({
         title: 'Erro ao salvar',
         description: message,
@@ -162,22 +162,22 @@ export function VehicleFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-xl p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Car className="h-5 w-5 text-primary" />
-            {vehicleToEdit ? 'Editar Veículo' : 'Novo Veículo'}
+            {vehicleToEdit ? 'Editar VeÃ­culo' : 'Novo VeÃ­culo'}
           </DialogTitle>
           <DialogDescription>
-            Cadastre os dados do veículo para emissão de orçamentos e ordens de serviço.
+            Cadastre os dados do veÃ­culo para emissÃ£o de orÃ§amentos e ordens de serviÃ§o.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Cliente Proprietário */}
+          {/* Cliente ProprietÃ¡rio */}
           <div className="space-y-2">
             <Label htmlFor="customer_id">
-              Cliente Proprietário <span className="text-destructive">*</span>
+              Cliente ProprietÃ¡rio <span className="text-destructive">*</span>
             </Label>
             <select
               id="customer_id"
@@ -238,7 +238,7 @@ export function VehicleFormModal({
 
             {/* Placa */}
             <div className="space-y-2">
-              <Label htmlFor="plate">Placa do Veículo</Label>
+              <Label htmlFor="plate">Placa do VeÃ­culo</Label>
               <Input
                 id="plate"
                 placeholder="ABC-1234 ou BRA2E19"
@@ -251,7 +251,7 @@ export function VehicleFormModal({
             {/* Tipo */}
             <div className="space-y-2">
               <Label htmlFor="type">
-                Tipo de Veículo <span className="text-destructive">*</span>
+                Tipo de VeÃ­culo <span className="text-destructive">*</span>
               </Label>
               <select
                 id="type"
@@ -288,13 +288,13 @@ export function VehicleFormModal({
             </div>
           </div>
 
-          {/* Observações */}
+          {/* ObservaÃ§Ãµes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Observações do Veículo</Label>
+            <Label htmlFor="notes">ObservaÃ§Ãµes do VeÃ­culo</Label>
             <textarea
               id="notes"
               rows={2}
-              placeholder="Ex: Possui película antiga para remoção; desembaçador traseiro sensível..."
+              placeholder="Ex: Possui pelÃ­cula antiga para remoÃ§Ã£o; desembaÃ§ador traseiro sensÃ­vel..."
               {...register('notes')}
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -316,9 +316,9 @@ export function VehicleFormModal({
                   Salvando...
                 </>
               ) : vehicleToEdit ? (
-                'Salvar Alterações'
+                'Salvar AlteraÃ§Ãµes'
               ) : (
-                'Cadastrar Veículo'
+                'Cadastrar VeÃ­culo'
               )}
             </Button>
           </DialogFooter>
@@ -327,3 +327,4 @@ export function VehicleFormModal({
     </Dialog>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -44,7 +44,7 @@ export function ProductFormModal({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
-      category: 'Película Automotiva',
+      category: 'PelÃ­cula Automotiva',
       brand: '',
       unit: 'm',
       quantity: 0,
@@ -59,7 +59,7 @@ export function ProductFormModal({
     if (productToEdit) {
       reset({
         name: productToEdit.name,
-        category: productToEdit.category || 'Película Automotiva',
+        category: productToEdit.category || 'PelÃ­cula Automotiva',
         brand: productToEdit.brand || '',
         unit: productToEdit.unit,
         quantity: Number(productToEdit.quantity),
@@ -71,7 +71,7 @@ export function ProductFormModal({
     } else {
       reset({
         name: '',
-        category: 'Película Automotiva',
+        category: 'PelÃ­cula Automotiva',
         brand: '',
         unit: 'm',
         quantity: 0,
@@ -114,25 +114,25 @@ export function ProductFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-lg p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5 text-primary" />
-            {productToEdit ? 'Editar Item do Estoque' : 'Novo Item / Película no Estoque'}
+            {productToEdit ? 'Editar Item do Estoque' : 'Novo Item / PelÃ­cula no Estoque'}
           </DialogTitle>
           <DialogDescription>
-            Cadastre bobinas, rolos de películas, produtos químicos ou ferramentas.
+            Cadastre bobinas, rolos de pelÃ­culas, produtos quÃ­micos ou ferramentas.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="prod-name">
-              Nome do Produto / Película <span className="text-destructive">*</span>
+              Nome do Produto / PelÃ­cula <span className="text-destructive">*</span>
             </Label>
             <Input
               id="prod-name"
-              placeholder="Ex: Película G5 Premium 1.52m (Rolo 30m)"
+              placeholder="Ex: PelÃ­cula G5 Premium 1.52m (Rolo 30m)"
               {...register('name')}
               className={errors.name ? 'border-destructive' : ''}
             />
@@ -149,9 +149,9 @@ export function ProductFormModal({
                 {...register('category')}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="Película Automotiva">Película Automotiva</option>
-                <option value="Película Arquitetura / Residencial">Película Arquitetura / Residencial</option>
-                <option value="Película Premium">Película Premium (Cerâmica/Carbon)</option>
+                <option value="PelÃ­cula Automotiva">PelÃ­cula Automotiva</option>
+                <option value="PelÃ­cula Arquitetura / Residencial">PelÃ­cula Arquitetura / Residencial</option>
+                <option value="PelÃ­cula Premium">PelÃ­cula Premium (CerÃ¢mica/Carbon)</option>
                 <option value="Insumos & Ferramentas">Insumos & Ferramentas</option>
                 <option value="Outros">Outros</option>
               </select>
@@ -174,7 +174,7 @@ export function ProductFormModal({
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="m">Metros Lineares (m)</option>
-                <option value="m²">Metros Quadrados (m²)</option>
+                <option value="mÂ²">Metros Quadrados (mÂ²)</option>
                 <option value="rolo">Rolos / Bobinas</option>
                 <option value="un">Unidade (un)</option>
                 <option value="L">Litros (L)</option>
@@ -182,7 +182,7 @@ export function ProductFormModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="prod-cost">Custo Unitário (R$)</Label>
+              <Label htmlFor="prod-cost">Custo UnitÃ¡rio (R$)</Label>
               <Input
                 id="prod-cost"
                 type="number"
@@ -204,7 +204,7 @@ export function ProductFormModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="prod-min">Estoque Mínimo (Alerta)</Label>
+              <Label htmlFor="prod-min">Estoque MÃ­nimo (Alerta)</Label>
               <Input
                 id="prod-min"
                 type="number"
@@ -218,18 +218,18 @@ export function ProductFormModal({
               <Label htmlFor="prod-supp">Fornecedor Principal</Label>
               <Input
                 id="prod-supp"
-                placeholder="Ex: Distribuidora Nacional de Películas"
+                placeholder="Ex: Distribuidora Nacional de PelÃ­culas"
                 {...register('supplier')}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="prod-notes">Observações</Label>
+            <Label htmlFor="prod-notes">ObservaÃ§Ãµes</Label>
             <textarea
               id="prod-notes"
               rows={2}
-              placeholder="Localização na prateleira, especificações técnicas..."
+              placeholder="LocalizaÃ§Ã£o na prateleira, especificaÃ§Ãµes tÃ©cnicas..."
               {...register('notes')}
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
@@ -251,7 +251,7 @@ export function ProductFormModal({
                   Salvando...
                 </>
               ) : productToEdit ? (
-                'Salvar Alterações'
+                'Salvar AlteraÃ§Ãµes'
               ) : (
                 'Cadastrar no Estoque'
               )}
@@ -262,3 +262,4 @@ export function ProductFormModal({
     </Dialog>
   )
 }
+

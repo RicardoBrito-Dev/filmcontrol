@@ -164,8 +164,8 @@ export function WorkOrderDetails({ order }: WorkOrderDetailsProps) {
         </div>
       </div>
 
-      {/* Info Overview Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Info Overview Cards — 1 col on small mobile, 3 on sm+ */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-3 sm:grid-cols-3">
         {/* Cliente */}
         <Card>
           <CardHeader className="pb-2">

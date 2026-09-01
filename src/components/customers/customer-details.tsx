@@ -109,9 +109,9 @@ export function CustomerDetails({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
           {whatsappUrl && (
-            <Button asChild variant="outline" className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950">
+            <Button asChild variant="outline" className="gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 justify-center">
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-4 w-4" /> Enviar WhatsApp
               </a>
@@ -120,7 +120,7 @@ export function CustomerDetails({
           <Button
             variant="outline"
             onClick={() => setIsEditCustomerOpen(true)}
-            className="gap-2"
+            className="gap-2 justify-center"
           >
             <Edit className="h-4 w-4 text-amber-500" /> Editar Cliente
           </Button>
@@ -129,15 +129,15 @@ export function CustomerDetails({
               setVehicleToEdit(null)
               setIsAddVehicleOpen(true)
             }}
-            className="gap-2"
+            className="gap-2 justify-center"
           >
             <Plus className="h-4 w-4" /> Adicionar Veículo
           </Button>
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Metrics Row — 2 cols on mobile, 4 on desktop */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -205,8 +205,8 @@ export function CustomerDetails({
         </Card>
       </div>
 
-      {/* Info Cards Grid */}
-      <div className="grid gap-6 md:grid-cols-3">
+      {/* Info Cards Grid — stacks on mobile */}
+      <div className="grid gap-4 md:grid-cols-3">
         {/* Contato e Identificação */}
         <Card className="md:col-span-1">
           <CardHeader>

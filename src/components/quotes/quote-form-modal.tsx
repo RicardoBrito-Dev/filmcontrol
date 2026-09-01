@@ -371,7 +371,7 @@ export function QuoteFormModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-3xl p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2 data-[state=open]:slide-in-from-bottom-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <FileText className="h-5 w-5 text-primary" />

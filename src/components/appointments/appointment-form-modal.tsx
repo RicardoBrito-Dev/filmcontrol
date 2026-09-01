@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Calendar, Clock, User, Car, MapPin, Loader2, Building2 } from 'lucide-react'
@@ -58,7 +58,7 @@ export function AppointmentFormModal({
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
 
-  // Novo Cliente Rápido
+  // Novo Cliente RÃ¡pido
   const [newCustName, setNewCustName] = useState('')
   const [newCustPhone, setNewCustPhone] = useState('')
   const [newCustType, setNewCustType] = useState<'AUTOMOTIVO' | 'RESIDENCIAL'>('AUTOMOTIVO')
@@ -67,7 +67,7 @@ export function AppointmentFormModal({
   const [newVPlate, setNewVPlate] = useState('')
   const [newCustAddress, setNewCustAddress] = useState('')
 
-  const [title, setTitle] = useState('Instalação de Película')
+  const [title, setTitle] = useState('InstalaÃ§Ã£o de PelÃ­cula')
   const [startTime, setStartTime] = useState(
     new Date(Date.now() + 3600000).toISOString().slice(0, 16)
   )
@@ -113,7 +113,7 @@ export function AppointmentFormModal({
     e.preventDefault()
 
     if (!title.trim()) {
-      toast({ title: 'Informe o título do agendamento', variant: 'destructive' })
+      toast({ title: 'Informe o tÃ­tulo do agendamento', variant: 'destructive' })
       return
     }
 
@@ -200,26 +200,26 @@ export function AppointmentFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-lg p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Calendar className="h-5 w-5 text-primary" /> Novo Agendamento
           </DialogTitle>
           <DialogDescription>
-            Agende serviços de instalação para clientes novos ou existentes em 1 único passo.
+            Agende serviÃ§os de instalaÃ§Ã£o para clientes novos ou existentes em 1 Ãºnico passo.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="apt-title" className="text-xs font-semibold">
-              Título do Serviço / Película <span className="text-destructive">*</span>
+              TÃ­tulo do ServiÃ§o / PelÃ­cula <span className="text-destructive">*</span>
             </Label>
             <Input
               id="apt-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Película Nano Cerâmica / Jateado Sacada"
+              placeholder="Ex: PelÃ­cula Nano CerÃ¢mica / Jateado Sacada"
               className="h-9 text-sm font-medium"
               required
             />
@@ -242,7 +242,7 @@ export function AppointmentFormModal({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  ✨ Novo
+                  âœ¨ Novo
                 </button>
                 <button
                   type="button"
@@ -253,7 +253,7 @@ export function AppointmentFormModal({
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  👤 Cadastrado ({customers.length})
+                  ðŸ‘¤ Cadastrado ({customers.length})
                 </button>
               </div>
             </div>
@@ -292,7 +292,7 @@ export function AppointmentFormModal({
                             : 'border-muted bg-background text-muted-foreground'
                         }`}
                       >
-                        🚗 Auto
+                        ðŸš— Auto
                       </button>
                       <button
                         type="button"
@@ -303,7 +303,7 @@ export function AppointmentFormModal({
                             : 'border-muted bg-background text-muted-foreground'
                         }`}
                       >
-                        🏠 Residencial
+                        ðŸ  Residencial
                       </button>
                     </div>
                   </div>
@@ -333,7 +333,7 @@ export function AppointmentFormModal({
                 ) : (
                   <div className="pt-1 border-t">
                     <Input
-                      placeholder="Endereço da instalação (Rua, nº, bairro)"
+                      placeholder="EndereÃ§o da instalaÃ§Ã£o (Rua, nÂº, bairro)"
                       value={newCustAddress}
                       onChange={(e) => {
                         setNewCustAddress(e.target.value)
@@ -368,7 +368,7 @@ export function AppointmentFormModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="apt-vehicle" className="text-xs">Veículo / Local</Label>
+                  <Label htmlFor="apt-vehicle" className="text-xs">VeÃ­culo / Local</Label>
                   <select
                     id="apt-vehicle"
                     value={selectedVehicleId}
@@ -377,12 +377,12 @@ export function AppointmentFormModal({
                   >
                     <option value="">
                       {selectedCustomer?.address
-                        ? `Aplicação: ${selectedCustomer.address}`
+                        ? `AplicaÃ§Ã£o: ${selectedCustomer.address}`
                         : 'Atendimento na Loja'}
                     </option>
                     {vehicles.map((v) => (
                       <option key={v.id} value={v.id}>
-                        🚗 {v.brand} {v.model} ({v.plate || 'S/ placa'})
+                        ðŸš— {v.brand} {v.model} ({v.plate || 'S/ placa'})
                       </option>
                     ))}
                   </select>
@@ -393,7 +393,7 @@ export function AppointmentFormModal({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="apt-start" className="text-xs font-semibold">Data & Horário de Início *</Label>
+              <Label htmlFor="apt-start" className="text-xs font-semibold">Data & HorÃ¡rio de InÃ­cio *</Label>
               <Input
                 id="apt-start"
                 type="datetime-local"
@@ -405,7 +405,7 @@ export function AppointmentFormModal({
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="apt-end" className="text-xs font-semibold">Previsão de Término</Label>
+              <Label htmlFor="apt-end" className="text-xs font-semibold">PrevisÃ£o de TÃ©rmino</Label>
               <Input
                 id="apt-end"
                 type="datetime-local"
@@ -418,7 +418,7 @@ export function AppointmentFormModal({
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <Label htmlFor="apt-address" className="text-xs font-semibold">Local da Instalação</Label>
+              <Label htmlFor="apt-address" className="text-xs font-semibold">Local da InstalaÃ§Ã£o</Label>
               <Input
                 id="apt-address"
                 value={address}
@@ -441,20 +441,20 @@ export function AppointmentFormModal({
                 <option value="CONFIRMADO">Confirmado</option>
                 <option value="AGENDADO">Agendado</option>
                 <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDO">Concluído</option>
+                <option value="CONCLUIDO">ConcluÃ­do</option>
                 <option value="CANCELADO">Cancelado</option>
               </select>
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="apt-notes" className="text-xs font-semibold">Observações</Label>
+            <Label htmlFor="apt-notes" className="text-xs font-semibold">ObservaÃ§Ãµes</Label>
             <textarea
               id="apt-notes"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Retirar veículo às 16h; cliente pediu atenção especial no parabrisa..."
+              placeholder="Ex: Retirar veÃ­culo Ã s 16h; cliente pediu atenÃ§Ã£o especial no parabrisa..."
               className="w-full rounded-lg border bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -485,3 +485,4 @@ export function AppointmentFormModal({
     </Dialog>
   )
 }
+

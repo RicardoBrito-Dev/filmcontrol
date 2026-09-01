@@ -231,7 +231,7 @@ export function WorkOrderFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto w-full sm:max-w-2xl p-4 sm:p-6 gap-4 rounded-t-2xl sm:rounded-2xl top-auto bottom-0 sm:top-1/2 sm:bottom-auto translate-y-0 sm:-translate-y-1/2 data-[state=open]:slide-in-from-bottom-0">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <ClipboardList className="h-5 w-5 text-primary" /> Nova Ordem de Serviço
@@ -515,21 +515,21 @@ export function WorkOrderFormModal({
                       </select>
                     )}
                   </div>
-                  <div className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-6 space-y-0.5">
-                      <Label className="text-[11px] text-muted-foreground">Descrição</Label>
+                  <div className="grid grid-cols-12 gap-2.5 items-end">
+                    <div className="col-span-12 sm:col-span-6 space-y-0.5">
+                      <Label className="text-[11px] text-muted-foreground">Descrição do Serviço / Película</Label>
                       <Input
                         value={item.description}
                         onChange={(e) =>
                           handleItemChange(index, 'description', e.target.value)
                         }
                         placeholder="Ex: Película G5 Completa"
-                        className="text-xs h-8"
+                        className="text-xs h-9"
                         required
                       />
                     </div>
-                    <div className="col-span-2 space-y-0.5">
-                      <Label className="text-[11px] text-muted-foreground">Qtd</Label>
+                    <div className="col-span-4 sm:col-span-2 space-y-0.5">
+                      <Label className="text-[11px] text-muted-foreground">Qtd (un/m²)</Label>
                       <Input
                         type="number"
                         min={1}
@@ -537,34 +537,37 @@ export function WorkOrderFormModal({
                         onChange={(e) =>
                           handleItemChange(index, 'quantity', e.target.value)
                         }
-                        className="text-xs text-center font-mono h-8"
+                        className="text-xs text-center font-mono h-9"
                       />
                     </div>
-                    <div className="col-span-3 space-y-0.5">
+                    <div className="col-span-6 sm:col-span-3 space-y-0.5">
                       <Label className="text-[11px] text-muted-foreground">
                         {Number(item.quantity || 1) > 1 ? 'Preço p/ Un.' : 'Valor (R$)'}
                       </Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.unit_price}
-                        onChange={(e) =>
-                          handleItemChange(index, 'unit_price', e.target.value)
-                        }
-                        className="text-xs font-mono h-8"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={item.unit_price}
+                          onChange={(e) =>
+                            handleItemChange(index, 'unit_price', e.target.value)
+                          }
+                          className="text-xs font-mono h-9 pl-7"
+                        />
+                      </div>
                     </div>
-                    <div className="col-span-1 flex justify-end pt-4">
+                    <div className="col-span-2 sm:col-span-1 flex justify-end pb-0.5">
                       {items.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => handleRemoveItem(index)}
-                          className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                          className="h-9 w-9 text-destructive hover:bg-destructive/10"
                           title="Remover item"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
