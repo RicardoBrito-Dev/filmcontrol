@@ -38,26 +38,27 @@ import {
   DEFAULT_FILM_PRICES,
   type FilmPriceConfig,
 } from '@/services/film-pricing.service'
+import {
+  storeSettingsService,
+  DEFAULT_STORE_SETTINGS,
+} from '@/services/store-settings.service'
 import { formatCurrency } from '@/lib/utils'
 import { toast } from '@/hooks/use-toast'
 
 export default function ConfiguracoesPage() {
-  const [companyName, setCompanyName] = useState('FILMCONTROL — Instalação Profissional de Películas')
-  const [document, setDocument] = useState('12.345.678/0001-90')
-  const [phone, setPhone] = useState('(11) 3456-7890')
-  const [whatsapp, setWhatsapp] = useState('(11) 99999-8888')
-  const [email, setEmail] = useState('contato@filmcontrol.com.br')
-  const [address, setAddress] = useState('Av. das Nações Unidas, 14200 - São Paulo/SP')
+  const [companyName, setCompanyName] = useState('Minha Loja de Películas')
+  const [document, setDocument] = useState('')
+  const [phone, setPhone] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [email, setEmail] = useState('')
+  const [address, setAddress] = useState('')
+  const [pixKey, setPixKey] = useState('')
 
   // Film pricing per m² and linear meter
   const [filmPrices, setFilmPrices] = useState<Record<string, FilmPriceConfig>>(DEFAULT_FILM_PRICES)
 
   // Warranty and terms
-  const [warrantyTerms, setWarrantyTerms] = useState(
-    `1. GARANTIA: Garantia de 3 a 5 anos contra bolhas, descolamento e desbotamento para películas da linha Premium e Carbon.
-2. CUIDADOS PÓS-INSTALAÇÃO: Não abrir os vidros laterais e traseiro por no mínimo 72 horas para cura total da película. Não utilizar produtos abrasivos ou álcool na limpeza interna.
-3. FORMAS DE PAGAMENTO: Pagamento via PIX com desconto à vista ou parcelado em até 3x no cartão sem juros.`
-  )
+  const [warrantyTerms, setWarrantyTerms] = useState(DEFAULT_STORE_SETTINGS.warrantyTerms || '')
 
   const [saving, setSaving] = useState(false)
 
@@ -74,8 +75,20 @@ export default function ConfiguracoesPage() {
   const [modalPriceM2, setModalPriceM2] = useState<number>(120)
 
   useEffect(() => {
-    const loaded = filmPricingService.getPricing()
-    setFilmPrices(loaded)
+    const loadedPricing = filmPricingService.getPricing()
+    setFilmPrices(loadedPricing)
+
+    const store = storeSettingsService.getSettings()
+    setCompanyName(store.name || '')
+    setDocument(store.document || '')
+    setPhone(store.phone || '')
+    setWhatsapp(store.whatsapp || '')
+    setEmail(store.email || '')
+    setAddress(store.address || '')
+    setPixKey(store.pixKey || '')
+    if (store.warrantyTerms) {
+      setWarrantyTerms(store.warrantyTerms)
+    }
   }, [])
 
   const handlePriceChange = (key: string, field: 'pricePerM2' | 'costPerM2' | 'costPerLinearMeter' | 'rollWidth', value: number) => {
@@ -204,14 +217,25 @@ export default function ConfiguracoesPage() {
 
     filmPricingService.saveAllPricing(filmPrices)
 
+    storeSettingsService.saveSettings({
+      name: companyName,
+      document,
+      phone,
+      whatsapp,
+      email,
+      address,
+      pixKey,
+      warrantyTerms,
+    })
+
     setTimeout(() => {
       setSaving(false)
       toast({
         title: 'Configurações salvas com sucesso!',
-        description: 'Tabela de preços, bobinas e dados da empresa atualizados.',
+        description: 'Dados da sua loja, chave PIX, garantia e tabela de películas atualizados.',
         variant: 'success' as 'default',
       })
-    }, 500)
+    }, 400)
   }
 
   const filmList = Object.entries(filmPrices)
@@ -467,13 +491,30 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="comp-addr" className="text-xs">Endereço Completo</Label>
+                <Label htmlFor="comp-addr" className="text-xs">Endereço Completo da Loja / Oficina</Label>
                 <Input
                   id="comp-addr"
+                  placeholder="Ex: Av. Paulista, 1000 - Centro - São Paulo/SP"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="text-sm h-9"
                 />
+              </div>
+
+              <div className="space-y-1 pt-1 border-t">
+                <Label htmlFor="comp-pix" className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  Chave PIX da Loja (Para Recebimento nos Orçamentos)
+                </Label>
+                <Input
+                  id="comp-pix"
+                  placeholder="Ex: pix@sualoja.com.br ou 11999998888 ou CNPJ"
+                  value={pixKey}
+                  onChange={(e) => setPixKey(e.target.value)}
+                  className="text-sm h-9 font-mono border-emerald-500/30 focus:border-emerald-500"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Se preenchida, sua chave PIX será adicionada automaticamente nos orçamentos em PDF e mensagens de WhatsApp.
+                </p>
               </div>
             </CardContent>
           </Card>

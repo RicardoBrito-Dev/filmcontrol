@@ -1,6 +1,7 @@
 'use client'
 
-import { Moon, Sun, Bell, Menu, Film } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Moon, Sun, Bell, Menu, Film, Building2 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { authService } from '@/services/auth.service'
+import { storeSettingsService } from '@/services/store-settings.service'
 import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
 import { getInitials } from '@/lib/utils'
@@ -26,6 +28,21 @@ interface HeaderProps {
 export function Header({ onMobileMenuOpen, userName = 'Usuário', userEmail = '' }: HeaderProps) {
   const { theme, setTheme } = useTheme()
   const router = useRouter()
+  const [storeName, setStoreName] = useState<string>('')
+
+  useEffect(() => {
+    const update = () => {
+      const s = storeSettingsService.getSettings()
+      if (s.name) setStoreName(s.name)
+    }
+    update()
+    window.addEventListener('store_settings_updated', update)
+    window.addEventListener('storage', update)
+    return () => {
+      window.removeEventListener('store_settings_updated', update)
+      window.removeEventListener('storage', update)
+    }
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -43,8 +60,8 @@ export function Header({ onMobileMenuOpen, userName = 'Usuário', userEmail = ''
 
   return (
     <header className="flex h-14 sm:h-16 items-center justify-between border-b bg-card/95 backdrop-blur-sm px-3 sm:px-6 shrink-0">
-      {/* Left: Mobile menu button + brand on mobile */}
-      <div className="flex items-center gap-2">
+      {/* Left: Mobile menu button + brand on mobile / store name */}
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
@@ -60,10 +77,20 @@ export function Header({ onMobileMenuOpen, userName = 'Usuário', userEmail = ''
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
             <Film className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
-          <span className="text-sm font-bold tracking-tight">
-            FILM<span className="text-primary">CONTROL</span>
+          <span className="text-sm font-bold tracking-tight truncate max-w-[130px]">
+            {storeName || 'FILMCONTROL'}
           </span>
         </div>
+
+        {/* Desktop Store Name Badge */}
+        {storeName && (
+          <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/40 px-3 py-1 rounded-full border">
+            <Building2 className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="font-semibold text-foreground truncate max-w-[240px]">
+              {storeName}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Right: actions */}

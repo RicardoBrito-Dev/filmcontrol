@@ -28,6 +28,7 @@ import { formatCurrency, formatDate, formatPhone } from '@/lib/utils'
 import { workOrderService, type WorkOrderWithRelations } from '@/services/work-order.service'
 import { quoteService, type QuoteWithRelations } from '@/services/quote.service'
 import { customerService, type CustomerWithRelations } from '@/services/customer.service'
+import { storeSettingsService } from '@/services/store-settings.service'
 import { toast } from '@/hooks/use-toast'
 
 interface AggregatedService {
@@ -304,8 +305,11 @@ export default function RelatoriosPage() {
       toast({ title: 'Cliente sem WhatsApp cadastrado.', variant: 'destructive' })
       return
     }
+    const storeSettings = storeSettingsService.getSettings()
+    const storeName = storeSettings.name || 'nossa loja'
+
     const cleanPhone = phone.replace(/\D/g, '')
-    const text = `Olá *${customer}*! Tudo bem? Aqui é da *FILMCONTROL*.\n\nGostaríamos de saber como ficou a instalação da sua película (*${serviceName}*) e se está tudo 100% com o acabamento e a sua garantia. Qualquer dúvida ou assistência, estamos à disposição!\n\nMuito obrigado pela preferência!`
+    const text = `Olá *${customer}*! Tudo bem? Aqui é da *${storeName}*.\n\nGostaríamos de saber como ficou a instalação da sua película (*${serviceName}*) e se está tudo 100% com o acabamento e a sua garantia. Qualquer dúvida ou assistência, estamos à disposição!\n\nMuito obrigado pela preferência!`
     window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank')
   }
 
@@ -315,15 +319,17 @@ export default function RelatoriosPage() {
       toast({ title: 'Cliente sem WhatsApp cadastrado.', variant: 'destructive' })
       return
     }
+    const storeSettings = storeSettingsService.getSettings()
+    const storeName = storeSettings.name || 'nossa loja'
     const cleanPhone = reminder.customerPhone.replace(/\D/g, '')
 
     let msg = ''
     if (reminder.filmCategoryType === 'TINTADA') {
-      msg = `Olá *${reminder.customerName}*! Tudo bem? Aqui é da *FILMCONTROL*.\n\nFaz cerca de 1 ano que instalamos a película no seu *${reminder.vehicleOrAddress}*.\n\nComo as películas tintadas têm durabilidade média recomendada de 1 ano contra o sol e desbotamento natural, preparamos uma condição especial exclusiva para você renovar ou fazer um upgrade para *Poliéster Profissional* ou *Nano Cerâmica*.\n\nPodemos agendar uma avaliação gratuita do estado da sua película nesta semana?`
+      msg = `Olá *${reminder.customerName}*! Tudo bem? Aqui é da *${storeName}*.\n\nFaz cerca de 1 ano que instalamos a película no seu *${reminder.vehicleOrAddress}*.\n\nComo as películas tintadas têm durabilidade média recomendada de 1 ano contra o sol e desbotamento natural, preparamos uma condição especial exclusiva para você renovar ou fazer um upgrade para *Poliéster Profissional* ou *Nano Cerâmica*.\n\nPodemos agendar uma avaliação gratuita do estado da sua película nesta semana?`
     } else if (reminder.filmCategoryType === 'POLIESTER') {
-      msg = `Olá *${reminder.customerName}*! Tudo bem? Aqui é da *FILMCONTROL*.\n\nPassando para lembrar que já faz cerca de 3 anos da aplicação de película no seu *${reminder.vehicleOrAddress}*.\n\nPara garantir que a proteção térmica, privacidade e visibilidade continuem 100% perfeitas, estamos com condições especiais de renovação para clientes da casa.\n\nGostaria de verificar as opções e garantir um desconto de renovação?`
+      msg = `Olá *${reminder.customerName}*! Tudo bem? Aqui é da *${storeName}*.\n\nPassando para lembrar que já faz cerca de 3 anos da aplicação de película no seu *${reminder.vehicleOrAddress}*.\n\nPara garantir que a proteção térmica, privacidade e visibilidade continuem 100% perfeitas, estamos com condições especiais de renovação para clientes da casa.\n\nGostaria de verificar as opções e garantir um desconto de renovação?`
     } else {
-      msg = `Olá *${reminder.customerName}*! Tudo bem? Aqui é da *FILMCONTROL*.\n\nJá se passaram cerca de 4 anos desde a instalação da sua película de alta performance no seu *${reminder.vehicleOrAddress}*.\n\nGostaríamos de convidar você para uma checagem preventiva e apresentar nossas novas tecnologias de conforto térmico e proteção solar com condições exclusivas de cliente VIP.\n\nPodemos reservar um horário para você?`
+      msg = `Olá *${reminder.customerName}*! Tudo bem? Aqui é da *${storeName}*.\n\nJá se passaram cerca de 4 anos desde a instalação da sua película de alta performance no seu *${reminder.vehicleOrAddress}*.\n\nGostaríamos de convidar você para uma checagem preventiva e apresentar nossas novas tecnologias de conforto térmico e proteção solar com condições exclusivas de cliente VIP.\n\nPodemos reservar um horário para você?`
     }
 
     window.open(`https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank')
