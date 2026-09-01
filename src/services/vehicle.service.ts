@@ -179,9 +179,13 @@ export const vehicleService = {
   async delete(id: string): Promise<void> {
     try {
       const supabase = createClient()
+      // Desvincular de orçamentos, ordens e agendamentos antes de excluir o veículo
+      await supabase.from('quotes').update({ vehicle_id: null }).eq('vehicle_id', id)
+      await supabase.from('work_orders').update({ vehicle_id: null }).eq('vehicle_id', id)
+      await supabase.from('appointments').update({ vehicle_id: null }).eq('vehicle_id', id)
       await supabase.from('vehicles').delete().eq('id', id)
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error('Erro ao excluir veículo:', err)
     }
 
     const currentList = getLocalVehicles()

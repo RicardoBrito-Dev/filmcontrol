@@ -82,14 +82,15 @@ export const customerService = {
         .single()
 
       if (!error && data) {
-        const totalSpent = (data.work_orders || []).reduce(
-          (acc: number, curr: WorkOrder) => acc + Number(curr.total || 0),
-          0
-        )
+        const totalSpent = (data.work_orders || [])
+          .filter((w: WorkOrder) => w.payment_status === 'PAGO')
+          .reduce((acc: number, w: WorkOrder) => acc + Number(w.total || 0), 0)
+
         return {
           ...data,
           total_spent: totalSpent,
-          services_count: data.work_orders?.length || 0,
+          services_count: (data.work_orders || []).length,
+          last_service_date: data.work_orders?.[0]?.created_at || null,
         }
       }
     } catch {
@@ -101,7 +102,10 @@ export const customerService = {
     return found || null
   },
 
-  async create(data: CustomerFormData, vehicleInput?: QuickVehicleInput | null): Promise<CustomerWithRelations> {
+  async create(
+    data: CustomerFormData,
+    vehicleInput?: QuickVehicleInput | null
+  ): Promise<CustomerWithRelations> {
     try {
       const supabase = createClient()
       const {
@@ -116,7 +120,6 @@ export const customerService = {
           .single()
 
         let companyId = userProfile?.company_id
-
         if (!companyId) {
           const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
           companyId = comp?.id
@@ -145,7 +148,12 @@ export const customerService = {
             .single()
 
           if (!error && newCustomer) {
-            const customerObj: CustomerWithRelations = { ...newCustomer, vehicles: [] }
+            const customerObj: CustomerWithRelations = {
+              ...newCustomer,
+              vehicles: [],
+              total_spent: 0,
+              services_count: 0,
+            }
 
             if (vehicleInput?.brand && vehicleInput?.model) {
               const createdVeh = await vehicleService.create({
@@ -249,12 +257,80 @@ export const customerService = {
   async delete(id: string): Promise<void> {
     try {
       const supabase = createClient()
-      await supabase.from('customers').delete().eq('id', id)
-    } catch {
-      // Fallback
+
+      // 1. Apagar itens de orçamentos e orçamentos vinculados ao cliente
+      const { data: quotes } = await supabase.from('quotes').select('id').eq('customer_id', id)
+      if (quotes && quotes.length > 0) {
+        const qIds = quotes.map((q) => q.id)
+        await supabase.from('quote_items').delete().in('quote_id', qIds)
+        await supabase.from('quotes').delete().in('id', qIds)
+      }
+
+      // 2. Apagar pagamentos, itens de OS e OS vinculadas ao cliente
+      const { data: workOrders } = await supabase.from('work_orders').select('id').eq('customer_id', id)
+      if (workOrders && workOrders.length > 0) {
+        const woIds = workOrders.map((w) => w.id)
+        await supabase.from('payments').delete().in('work_order_id', woIds)
+        await supabase.from('work_order_items').delete().in('work_order_id', woIds)
+        await supabase.from('files').delete().in('work_order_id', woIds)
+        await supabase.from('work_orders').delete().in('id', woIds)
+      }
+
+      // 3. Apagar agendamentos, avaliações, arquivos e veículos do cliente
+      await supabase.from('appointments').delete().eq('customer_id', id)
+      await supabase.from('reviews').delete().eq('customer_id', id)
+      await supabase.from('files').delete().eq('customer_id', id)
+      await supabase.from('vehicles').delete().eq('customer_id', id)
+
+      // 4. Apagar o registro do cliente
+      const { error } = await supabase.from('customers').delete().eq('id', id)
+      if (error) {
+        console.error('Erro ao excluir cliente no Supabase:', error)
+      }
+    } catch (err) {
+      console.error('Exceção ao excluir cliente:', err)
     }
 
+    // 5. Limpar do LocalStorage
     const currentList = getLocalCustomers()
     saveLocalCustomers(currentList.filter((c) => c.id !== id))
+
+    if (typeof window !== 'undefined') {
+      try {
+        const vKey = 'filmcontrol_vehicles'
+        const vData = localStorage.getItem(vKey)
+        if (vData) {
+          const vList = JSON.parse(vData)
+          localStorage.setItem(vKey, JSON.stringify(vList.filter((v: any) => v.customer_id !== id)))
+        }
+      } catch {}
+
+      try {
+        const qKey = 'filmcontrol_quotes'
+        const qData = localStorage.getItem(qKey)
+        if (qData) {
+          const qList = JSON.parse(qData)
+          localStorage.setItem(qKey, JSON.stringify(qList.filter((q: any) => q.customer_id !== id)))
+        }
+      } catch {}
+
+      try {
+        const aKey = 'filmcontrol_appointments'
+        const aData = localStorage.getItem(aKey)
+        if (aData) {
+          const aList = JSON.parse(aData)
+          localStorage.setItem(aKey, JSON.stringify(aList.filter((a: any) => a.customer_id !== id)))
+        }
+      } catch {}
+
+      try {
+        const woKey = 'filmcontrol_work_orders'
+        const woData = localStorage.getItem(woKey)
+        if (woData) {
+          const woList = JSON.parse(woData)
+          localStorage.setItem(woKey, JSON.stringify(woList.filter((w: any) => w.customer_id !== id)))
+        }
+      } catch {}
+    }
   },
 }
