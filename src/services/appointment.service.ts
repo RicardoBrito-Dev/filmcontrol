@@ -20,7 +20,13 @@ function getLocalAppointments(): AppointmentWithRelations[] {
   const data = localStorage.getItem(STORAGE_KEY)
   if (!data) return []
   try {
-    return JSON.parse(data)
+    const list: AppointmentWithRelations[] = JSON.parse(data)
+    return list.sort((a, b) => {
+      const timeB = new Date(b.start_time || b.created_at || 0).getTime()
+      const timeA = new Date(a.start_time || a.created_at || 0).getTime()
+      if (timeB !== timeA) return timeB - timeA
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    })
   } catch {
     return []
   }
@@ -43,9 +49,11 @@ export const appointmentService = {
           customer:customers (*),
           vehicle:vehicles (*)
         `)
-        .order('start_time', { ascending: true })
+        .order('start_time', { ascending: false })
+        .order('created_at', { ascending: false })
 
       if (!error && data) {
+        saveLocalAppointments(data)
         return data
       }
     } catch {

@@ -76,42 +76,49 @@ export function CalendarView({
   const [newEndTime, setNewEndTime] = useState('')
   const [savingDateTime, setSavingDateTime] = useState(false)
 
-  // Filter appointments
-  const filtered = appointments.filter((apt) => {
-    const aptDate = new Date(apt.start_time)
-    let periodMatch = true
-    if (viewMode === 'HOJE') {
-      const today = new Date()
-      periodMatch = (
-        aptDate.getDate() === today.getDate() &&
-        aptDate.getMonth() === today.getMonth() &&
-        aptDate.getFullYear() === today.getFullYear()
-      )
-    } else if (viewMode === 'SEMANA') {
-      const startOfWeek = new Date()
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
-      const endOfWeek = new Date(startOfWeek)
-      endOfWeek.setDate(endOfWeek.getDate() + 6)
-      periodMatch = aptDate >= startOfWeek && aptDate <= endOfWeek
-    }
+  // Filter appointments (ordenados: mais recentes no topo, mais antigos embaixo)
+  const filtered = appointments
+    .filter((apt) => {
+      const aptDate = new Date(apt.start_time)
+      let periodMatch = true
+      if (viewMode === 'HOJE') {
+        const today = new Date()
+        periodMatch = (
+          aptDate.getDate() === today.getDate() &&
+          aptDate.getMonth() === today.getMonth() &&
+          aptDate.getFullYear() === today.getFullYear()
+        )
+      } else if (viewMode === 'SEMANA') {
+        const startOfWeek = new Date()
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
+        const endOfWeek = new Date(startOfWeek)
+        endOfWeek.setDate(endOfWeek.getDate() + 6)
+        periodMatch = aptDate >= startOfWeek && aptDate <= endOfWeek
+      }
 
-    if (!periodMatch) return false
-    if (!searchTerm.trim()) return true
+      if (!periodMatch) return false
+      if (!searchTerm.trim()) return true
 
-    const term = searchTerm.toLowerCase().trim()
-    const termDigits = term.replace(/\D/g, '')
+      const term = searchTerm.toLowerCase().trim()
+      const termDigits = term.replace(/\D/g, '')
 
-    const titleMatch = apt.title?.toLowerCase().includes(term)
-    const custMatch = apt.customer?.name?.toLowerCase().includes(term)
-    const vehMatch = apt.vehicle
-      ? `${apt.vehicle.brand} ${apt.vehicle.model} ${apt.vehicle.plate || ''}`.toLowerCase().includes(term)
-      : false
-    const addrMatch = apt.address?.toLowerCase().includes(term) || apt.customer?.address?.toLowerCase().includes(term)
-    const phoneRaw = (apt.customer?.whatsapp || apt.customer?.phone || '').replace(/\D/g, '')
-    const phoneMatch = termDigits.length >= 2 && phoneRaw.includes(termDigits)
+      const titleMatch = apt.title?.toLowerCase().includes(term)
+      const custMatch = apt.customer?.name?.toLowerCase().includes(term)
+      const vehMatch = apt.vehicle
+        ? `${apt.vehicle.brand} ${apt.vehicle.model} ${apt.vehicle.plate || ''}`.toLowerCase().includes(term)
+        : false
+      const addrMatch = apt.address?.toLowerCase().includes(term) || apt.customer?.address?.toLowerCase().includes(term)
+      const phoneRaw = (apt.customer?.whatsapp || apt.customer?.phone || '').replace(/\D/g, '')
+      const phoneMatch = termDigits.length >= 2 && phoneRaw.includes(termDigits)
 
-    return titleMatch || custMatch || vehMatch || addrMatch || phoneMatch
-  })
+      return titleMatch || custMatch || vehMatch || addrMatch || phoneMatch
+    })
+    .sort((a, b) => {
+      const timeB = new Date(b.start_time || b.created_at || 0).getTime()
+      const timeA = new Date(a.start_time || a.created_at || 0).getTime()
+      if (timeB !== timeA) return timeB - timeA
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    })
 
   const formatToLocalInput = (dateInput: string | Date) => {
     const d = new Date(dateInput)
