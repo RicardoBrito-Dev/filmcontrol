@@ -11,6 +11,11 @@ import type {
 import type { WorkOrderFormData } from '@/schemas/work-order.schema'
 import { generateWorkOrderNumber } from '@/lib/utils'
 
+function isValidUuid(id?: string | null): boolean {
+  if (!id) return false
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+}
+
 export interface WorkOrderWithRelations extends WorkOrder {
   customer?: Customer
   vehicle?: Vehicle | null
@@ -146,8 +151,8 @@ export const workOrderService = {
               company_id: companyId,
               number,
               customer_id: data.customer_id,
-              vehicle_id: data.vehicle_id || null,
-              quote_id: data.quote_id || null,
+              vehicle_id: isValidUuid(data.vehicle_id) ? data.vehicle_id : null,
+              quote_id: isValidUuid(data.quote_id) ? data.quote_id : null,
               installer_id: user.id,
               status: data.status,
               payment_status: data.payment_status,
@@ -161,8 +166,8 @@ export const workOrderService = {
           if (!error && inserted) {
             const itemsToInsert = data.items.map((item) => ({
               work_order_id: inserted.id,
-              service_id: item.service_id || null,
-              product_id: item.product_id || null,
+              service_id: isValidUuid(item.service_id) ? item.service_id : null,
+              product_id: isValidUuid(item.product_id) ? item.product_id : null,
               description: item.description,
               quantity: item.quantity,
               unit_price: item.unit_price,
@@ -211,21 +216,39 @@ export const workOrderService = {
 
     const notes = `Ordem gerada automaticamente do Orçamento #${quote.number}. ${quote.notes || ''}`
 
-    // 1. Verifica se já existe OS para este orçamento no Supabase
+    // ========= 1. Busca e atualiza no Supabase =========
     try {
       const supabase = createClient()
-      const { data: existingList } = await supabase
-        .from('work_orders')
-        .select(`*, customer:customers(*), vehicle:vehicles(*), items:work_order_items(*)`)
-        .or(`quote_id.eq.${quote.id},notes.ilike.%#${quote.number}%`)
+
+      // Busca por quote_id (se UUID válido) OU por padrão no campo notes
+      let existingList: any[] | null = null
+
+      if (isValidUuid(quote.id)) {
+        const { data } = await supabase
+          .from('work_orders')
+          .select(`*, customer:customers(*), vehicle:vehicles(*), items:work_order_items(*)`)
+          .or(`quote_id.eq.${quote.id},notes.ilike.%#${quote.number}%`)
+        existingList = data
+      }
+
+      // Fallback: busca apenas por notes se a primeira query não retornou nada
+      if (!existingList || existingList.length === 0) {
+        const { data } = await supabase
+          .from('work_orders')
+          .select(`*, customer:customers(*), vehicle:vehicles(*), items:work_order_items(*)`)
+          .ilike('notes', `%#${quote.number}%`)
+        existingList = data
+      }
 
       if (existingList && existingList.length > 0) {
         const existing = existingList[0]
-        const { data: updated } = await supabase
+
+        // Tenta atualizar
+        const { data: updated, error: updateError } = await supabase
           .from('work_orders')
           .update({
             customer_id: quote.customer_id,
-            vehicle_id: quote.vehicle_id || null,
+            vehicle_id: isValidUuid(quote.vehicle_id) ? quote.vehicle_id : null,
             total: Number(quote.total || 0),
             notes,
             updated_at: new Date().toISOString(),
@@ -234,12 +257,17 @@ export const workOrderService = {
           .select(`*, customer:customers(*), vehicle:vehicles(*), items:work_order_items(*)`)
           .single()
 
-        if (updated) {
+        if (updateError) {
+          console.error('[WO] Erro ao atualizar OS existente:', updateError.message)
+        }
+
+        // Atualiza os itens da OS (delete + insert)
+        try {
           await supabase.from('work_order_items').delete().eq('work_order_id', existing.id)
           const itemsToInsert = items.map((i) => ({
             work_order_id: existing.id,
-            service_id: i.service_id,
-            product_id: i.product_id,
+            service_id: isValidUuid(i.service_id) ? i.service_id : null,
+            product_id: isValidUuid(i.product_id) ? i.product_id : null,
             description: i.description,
             quantity: i.quantity,
             unit_price: i.unit_price,
@@ -248,25 +276,34 @@ export const workOrderService = {
           if (itemsToInsert.length > 0) {
             await supabase.from('work_order_items').insert(itemsToInsert)
           }
-
-          const localList = getLocalWorkOrders()
-          const idx = localList.findIndex(
-            (w) => w.id === existing.id || w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number))
-          )
-          if (idx !== -1) {
-            localList[idx] = { ...updated, items }
-          } else {
-            localList.unshift({ ...updated, items })
-          }
-          saveLocalWorkOrders(localList)
-          return { ...updated, items }
+        } catch (itemErr) {
+          console.error('[WO] Erro ao atualizar itens da OS:', itemErr)
         }
+
+        // Usa o resultado atualizado ou o existente como fallback
+        const result = updated || existing
+        const finalResult = { ...result, items }
+
+        // Sincroniza cache local
+        const localList = getLocalWorkOrders()
+        const idx = localList.findIndex(
+          (w) => w.id === existing.id || w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number))
+        )
+        if (idx !== -1) {
+          localList[idx] = finalResult
+        } else {
+          localList.unshift(finalResult)
+        }
+        saveLocalWorkOrders(localList)
+
+        // RETORNA AQUI — nunca cria duplicata se encontrou existente
+        return finalResult
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error('[WO] Erro ao buscar/atualizar OS no Supabase:', err)
     }
 
-    // 2. Verifica se já existe no cache local
+    // ========= 2. Verifica se já existe no cache local =========
     const currentList = getLocalWorkOrders()
     const existingIdx = currentList.findIndex(
       (w) => w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number))
@@ -286,7 +323,7 @@ export const workOrderService = {
       return currentList[existingIdx]
     }
 
-    // 3. Caso não exista, cria uma nova OS
+    // ========= 3. Caso não exista em nenhum lugar, cria uma nova OS =========
     const payload: WorkOrderFormData = {
       customer_id: quote.customer_id,
       vehicle_id: quote.vehicle_id || null,

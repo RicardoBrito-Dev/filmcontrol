@@ -2,6 +2,11 @@ import { createClient } from '@/lib/supabase/client'
 import type { Appointment, AppointmentStatus, Customer, Vehicle } from '@/types/database.types'
 import type { AppointmentFormData } from '@/schemas/appointment.schema'
 
+function isValidUuid(id?: string | null): boolean {
+  if (!id) return false
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+}
+
 export interface AppointmentWithRelations extends Appointment {
   customer?: Customer
   vehicle?: Vehicle | null
@@ -94,7 +99,7 @@ export const appointmentService = {
             .insert({
               company_id: companyId,
               customer_id: data.customer_id,
-              vehicle_id: data.vehicle_id || null,
+              vehicle_id: isValidUuid(data.vehicle_id) ? data.vehicle_id : null,
               title: data.title,
               start_time: data.start_time,
               end_time: data.end_time || null,
@@ -132,7 +137,7 @@ export const appointmentService = {
 
     const notes = `Orçamento #${quote.number} aprovado. Valor Total: R$ ${quote.total}.`
 
-    // 1. Verifica se já existe agendamento deste orçamento no Supabase
+    // ========= 1. Busca e atualiza no Supabase =========
     try {
       const supabase = createClient()
       const { data: existingList } = await supabase
@@ -142,12 +147,13 @@ export const appointmentService = {
 
       if (existingList && existingList.length > 0) {
         const existing = existingList[0]
-        const { data: updated } = await supabase
+
+        const { data: updated, error: updateError } = await supabase
           .from('appointments')
           .update({
             title,
             customer_id: quote.customer_id,
-            vehicle_id: quote.vehicle_id || null,
+            vehicle_id: isValidUuid(quote.vehicle_id) ? quote.vehicle_id : null,
             address,
             notes,
             updated_at: new Date().toISOString(),
@@ -156,25 +162,33 @@ export const appointmentService = {
           .select(`*, customer:customers(*), vehicle:vehicles(*)`)
           .single()
 
-        if (updated) {
-          const localList = getLocalAppointments()
-          const idx = localList.findIndex(
-            (a) => a.id === existing.id || (a.notes && a.notes.includes(quote.number))
-          )
-          if (idx !== -1) {
-            localList[idx] = updated
-          } else {
-            localList.unshift(updated)
-          }
-          saveLocalAppointments(localList)
-          return updated
+        if (updateError) {
+          console.error('[APT] Erro ao atualizar agendamento existente:', updateError.message)
         }
+
+        // Usa o resultado atualizado ou o existente como fallback
+        const result = updated || existing
+
+        // Sincroniza cache local
+        const localList = getLocalAppointments()
+        const idx = localList.findIndex(
+          (a) => a.id === existing.id || (a.notes && a.notes.includes(quote.number)) || (a.title && a.title.includes(quote.number))
+        )
+        if (idx !== -1) {
+          localList[idx] = result
+        } else {
+          localList.unshift(result)
+        }
+        saveLocalAppointments(localList)
+
+        // RETORNA AQUI — nunca cria duplicata se encontrou existente
+        return result
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.error('[APT] Erro ao buscar/atualizar agendamento no Supabase:', err)
     }
 
-    // 2. Verifica se já existe no cache local
+    // ========= 2. Verifica se já existe no cache local =========
     const currentList = getLocalAppointments()
     const localExistingIndex = currentList.findIndex(
       (a) =>
@@ -198,7 +212,7 @@ export const appointmentService = {
       return currentList[localExistingIndex]
     }
 
-    // 3. Caso não exista nenhum agendamento anterior, cria o primeiro
+    // ========= 3. Caso não exista nenhum agendamento anterior, cria o primeiro =========
     const defaultStartTime = new Date()
     defaultStartTime.setDate(defaultStartTime.getDate() + 1)
     defaultStartTime.setHours(9, 0, 0, 0)
