@@ -30,6 +30,11 @@ function saveLocalQuotes(quotes: QuoteWithRelations[]) {
   }
 }
 
+function isValidUuid(id?: string | null): boolean {
+  if (!id) return false
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+}
+
 export const quoteService = {
   async list(): Promise<QuoteWithRelations[]> {
     try {
@@ -45,6 +50,7 @@ export const quoteService = {
         .order('created_at', { ascending: false })
 
       if (!error && data) {
+        saveLocalQuotes(data)
         return data
       }
     } catch {
@@ -68,7 +74,9 @@ export const quoteService = {
         .eq('id', id)
         .single()
 
-      if (!error && data) return data
+      if (!error && data) {
+        return data
+      }
     } catch {
       // Fallback
     }
@@ -152,7 +160,7 @@ export const quoteService = {
           if (!quoteError && insertedQuote) {
             const itemsToInsert = data.items.map((item) => ({
               quote_id: insertedQuote.id,
-              service_id: item.service_id || null,
+              service_id: isValidUuid(item.service_id) ? item.service_id : null,
               description: item.description,
               quantity: item.quantity,
               width: item.width || null,
@@ -162,14 +170,20 @@ export const quoteService = {
               subtotal: item.subtotal,
             }))
 
-            await supabase.from('quote_items').insert(itemsToInsert)
+            const { data: insertedItems } = await supabase
+              .from('quote_items')
+              .insert(itemsToInsert)
+              .select()
 
             const fullQuote: QuoteWithRelations = {
               ...insertedQuote,
               customer,
               vehicle,
-              items: itemsToInsert,
+              items: insertedItems && insertedItems.length > 0 ? insertedItems : itemsToInsert,
             }
+
+            const currentList = getLocalQuotes().filter((q) => q.id !== fullQuote.id)
+            saveLocalQuotes([fullQuote, ...currentList])
 
             if (data.status === 'APROVADO') {
               await Promise.all([
@@ -236,16 +250,43 @@ export const quoteService = {
       if (!error && updated) {
         // Delete old items and insert updated items
         await supabase.from('quote_items').delete().eq('quote_id', id)
-        if (updatedItems.length > 0) {
-          await supabase.from('quote_items').insert(updatedItems)
+
+        const itemsToInsertInDb = data.items.map((item) => ({
+          quote_id: id,
+          service_id: isValidUuid(item.service_id) ? item.service_id : null,
+          description: item.description,
+          quantity: item.quantity,
+          width: item.width || null,
+          height: item.height || null,
+          area: item.area || null,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+        }))
+
+        let savedDbItems: any[] | null = null
+        if (itemsToInsertInDb.length > 0) {
+          const { data: insertedDbItems } = await supabase
+            .from('quote_items')
+            .insert(itemsToInsertInDb)
+            .select()
+          savedDbItems = insertedDbItems
         }
 
         const fullQuote: QuoteWithRelations = {
           ...updated,
-          customer,
-          vehicle,
-          items: updatedItems,
+          customer: customer || undefined,
+          vehicle: vehicle || null,
+          items: savedDbItems && savedDbItems.length > 0 ? savedDbItems : itemsToInsertInDb,
         }
+
+        const currentList = getLocalQuotes()
+        const idx = currentList.findIndex((q) => q.id === id)
+        if (idx !== -1) {
+          currentList[idx] = fullQuote
+        } else {
+          currentList.unshift(fullQuote)
+        }
+        saveLocalQuotes(currentList)
 
         if (data.status === 'APROVADO') {
           await Promise.all([

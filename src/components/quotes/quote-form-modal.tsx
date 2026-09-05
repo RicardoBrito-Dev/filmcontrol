@@ -98,13 +98,13 @@ export function QuoteFormModal({
   // Items in quote
   const [items, setItems] = useState<QuoteItemFormData[]>([
     {
-      description: 'Película G5 Laterais e Traseiro',
+      description: '',
       quantity: 1,
       width: null,
       height: null,
       area: null,
-      unit_price: 350.0,
-      subtotal: 350.0,
+      unit_price: 0,
+      subtotal: 0,
     },
   ])
 
@@ -128,19 +128,54 @@ export function QuoteFormModal({
         )
         setDiscount(Number(quoteToEdit.discount) || 0)
         setNotes(quoteToEdit.notes || '')
+
+        let loadedItems: QuoteItemFormData[] = []
+
         if (quoteToEdit.items && quoteToEdit.items.length > 0) {
-          setItems(
-            quoteToEdit.items.map((i) => ({
-              service_id: i.service_id,
-              description: i.description,
-              quantity: i.quantity,
-              width: i.width,
-              height: i.height,
-              area: i.area,
-              unit_price: Number(i.unit_price),
-              subtotal: Number(i.subtotal),
-            }))
-          )
+          loadedItems = quoteToEdit.items.map((i) => ({
+            service_id: i.service_id,
+            description: i.description || '',
+            quantity: Number(i.quantity) || 1,
+            width: i.width !== null && i.width !== undefined ? Number(i.width) : null,
+            height: i.height !== null && i.height !== undefined ? Number(i.height) : null,
+            area: i.area !== null && i.area !== undefined ? Number(i.area) : null,
+            unit_price: Number(i.unit_price) || 0,
+            subtotal: Number(i.subtotal) || 0,
+          }))
+        } else if (quoteToEdit.id) {
+          try {
+            const fullQuote = await quoteService.getById(quoteToEdit.id)
+            if (fullQuote?.items && fullQuote.items.length > 0) {
+              loadedItems = fullQuote.items.map((i) => ({
+                service_id: i.service_id,
+                description: i.description || '',
+                quantity: Number(i.quantity) || 1,
+                width: i.width !== null && i.width !== undefined ? Number(i.width) : null,
+                height: i.height !== null && i.height !== undefined ? Number(i.height) : null,
+                area: i.area !== null && i.area !== undefined ? Number(i.area) : null,
+                unit_price: Number(i.unit_price) || 0,
+                subtotal: Number(i.subtotal) || 0,
+              }))
+            }
+          } catch (e) {
+            console.error('Erro ao buscar itens do orçamento:', e)
+          }
+        }
+
+        if (loadedItems.length > 0) {
+          setItems(loadedItems)
+        } else {
+          setItems([
+            {
+              description: quoteToEdit.notes || 'Aplicação de Película',
+              quantity: 1,
+              width: null,
+              height: null,
+              area: null,
+              unit_price: Number(quoteToEdit.subtotal) || Number(quoteToEdit.total) || 0,
+              subtotal: Number(quoteToEdit.subtotal) || Number(quoteToEdit.total) || 0,
+            },
+          ])
         }
       } else {
         if (c.length > 0) {
@@ -156,13 +191,13 @@ export function QuoteFormModal({
         setNotes('')
         setItems([
           {
-            description: 'Película G5 Laterais e Traseiro',
+            description: '',
             quantity: 1,
             width: null,
             height: null,
             area: null,
-            unit_price: 350.0,
-            subtotal: 350.0,
+            unit_price: 0,
+            subtotal: 0,
           },
         ])
       }
