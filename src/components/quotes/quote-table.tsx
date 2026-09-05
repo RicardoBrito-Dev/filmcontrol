@@ -15,6 +15,7 @@ import {
   XCircle,
   Plus,
   Edit2,
+  Scissors,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -210,6 +211,11 @@ export function QuoteTable({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/otimizador-corte?quoteId=${quote.id}`} className="gap-2 cursor-pointer flex items-center text-primary font-medium">
+                            <Scissors className="h-3.5 w-3.5 text-primary" /> Otimizar Corte Bobina
+                          </Link>
+                        </DropdownMenuItem>
                         {onEdit && (
                           <DropdownMenuItem onClick={() => onEdit(quote)} className="gap-2 cursor-pointer">
                             <Edit2 className="h-3.5 w-3.5 text-amber-500" /> Editar Orçamento
@@ -360,6 +366,15 @@ export function QuoteTable({
                                     className="flex items-center gap-2 cursor-pointer"
                                   >
                                     <Eye className="h-4 w-4 text-blue-500" /> Ver / Imprimir PDF
+                                  </Link>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/otimizador-corte?quoteId=${quote.id}`}
+                                    className="flex items-center gap-2 cursor-pointer text-primary font-medium"
+                                  >
+                                    <Scissors className="h-4 w-4 text-primary" /> Otimizar Corte Bobina
                                   </Link>
                                 </DropdownMenuItem>
 
