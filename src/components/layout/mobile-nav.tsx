@@ -18,6 +18,7 @@ import {
   X,
   Film,
   ChevronRight,
+  Scissors,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,7 @@ const navGroups = [
     label: 'Gestão',
     items: [
       { name: 'Estoque', href: '/estoque', icon: Archive },
+      { name: 'Corte de Bobinas', href: '/otimizador-corte', icon: Scissors },
       { name: 'Financeiro', href: '/financeiro', icon: DollarSign },
       { name: 'Relatórios', href: '/relatorios', icon: BarChart3 },
       { name: 'Configurações', href: '/configuracoes', icon: Settings },

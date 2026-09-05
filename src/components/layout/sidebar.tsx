@@ -16,6 +16,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Scissors,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from './logo'
@@ -72,6 +73,11 @@ const navigation = [
     name: 'Estoque',
     href: '/estoque',
     icon: Archive,
+  },
+  {
+    name: 'Corte de Bobinas',
+    href: '/otimizador-corte',
+    icon: Scissors,
   },
   {
     name: 'Financeiro',
