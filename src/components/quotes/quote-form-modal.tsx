@@ -15,7 +15,23 @@ import {
   Building2,
   UserPlus,
   Edit,
+  Ruler,
+  Scissors,
 } from 'lucide-react'
+
+function parseDimensionsFromText(text: string): { width: number | null; height: number | null } {
+  if (!text) return { width: null, height: null }
+  // Ex: "1.20m x 0.80m", "1,20 x 0,80", "1.20x0.80", "1.20 × 0.80"
+  const match = text.match(/(\d+[.,]?\d*)\s*m?\s*[xX*×]\s*(\d+[.,]?\d*)/)
+  if (match) {
+    const w = parseFloat(match[1].replace(',', '.'))
+    const h = parseFloat(match[2].replace(',', '.'))
+    if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
+      return { width: w, height: h }
+    }
+  }
+  return { width: null, height: null }
+}
 import {
   Dialog,
   DialogContent,
@@ -27,6 +43,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { quoteService, type QuoteWithRelations } from '@/services/quote.service'
 import { customerService, type CustomerWithRelations, type QuickVehicleInput } from '@/services/customer.service'
 import { serviceService } from '@/services/service.service'
@@ -132,30 +149,60 @@ export function QuoteFormModal({
         let loadedItems: QuoteItemFormData[] = []
 
         if (quoteToEdit.items && quoteToEdit.items.length > 0) {
-          loadedItems = quoteToEdit.items.map((i) => ({
-            service_id: i.service_id,
-            description: i.description || '',
-            quantity: Number(i.quantity) || 1,
-            width: i.width !== null && i.width !== undefined ? Number(i.width) : null,
-            height: i.height !== null && i.height !== undefined ? Number(i.height) : null,
-            area: i.area !== null && i.area !== undefined ? Number(i.area) : null,
-            unit_price: Number(i.unit_price) || 0,
-            subtotal: Number(i.subtotal) || 0,
-          }))
+          loadedItems = quoteToEdit.items.map((i) => {
+            let w = i.width !== null && i.width !== undefined ? Number(i.width) : null
+            let h = i.height !== null && i.height !== undefined ? Number(i.height) : null
+            let area = i.area !== null && i.area !== undefined ? Number(i.area) : null
+
+            if ((w === null || h === null) && i.description) {
+              const parsed = parseDimensionsFromText(i.description)
+              if (parsed.width && parsed.height) {
+                w = parsed.width
+                h = parsed.height
+                area = Number((w * h).toFixed(4))
+              }
+            }
+
+            return {
+              service_id: i.service_id,
+              description: i.description || '',
+              quantity: Number(i.quantity) || 1,
+              width: w,
+              height: h,
+              area: area,
+              unit_price: Number(i.unit_price) || 0,
+              subtotal: Number(i.subtotal) || 0,
+            }
+          })
         } else if (quoteToEdit.id) {
           try {
             const fullQuote = await quoteService.getById(quoteToEdit.id)
             if (fullQuote?.items && fullQuote.items.length > 0) {
-              loadedItems = fullQuote.items.map((i) => ({
-                service_id: i.service_id,
-                description: i.description || '',
-                quantity: Number(i.quantity) || 1,
-                width: i.width !== null && i.width !== undefined ? Number(i.width) : null,
-                height: i.height !== null && i.height !== undefined ? Number(i.height) : null,
-                area: i.area !== null && i.area !== undefined ? Number(i.area) : null,
-                unit_price: Number(i.unit_price) || 0,
-                subtotal: Number(i.subtotal) || 0,
-              }))
+              loadedItems = fullQuote.items.map((i) => {
+                let w = i.width !== null && i.width !== undefined ? Number(i.width) : null
+                let h = i.height !== null && i.height !== undefined ? Number(i.height) : null
+                let area = i.area !== null && i.area !== undefined ? Number(i.area) : null
+
+                if ((w === null || h === null) && i.description) {
+                  const parsed = parseDimensionsFromText(i.description)
+                  if (parsed.width && parsed.height) {
+                    w = parsed.width
+                    h = parsed.height
+                    area = Number((w * h).toFixed(4))
+                  }
+                }
+
+                return {
+                  service_id: i.service_id,
+                  description: i.description || '',
+                  quantity: Number(i.quantity) || 1,
+                  width: w,
+                  height: h,
+                  area: area,
+                  unit_price: Number(i.unit_price) || 0,
+                  subtotal: Number(i.subtotal) || 0,
+                }
+              })
             }
           } catch (e) {
             console.error('Erro ao buscar itens do orçamento:', e)
@@ -247,21 +294,45 @@ export function QuoteFormModal({
       const current = { ...updated[index], [field]: value }
 
       if (field === 'width' || field === 'height' || field === 'quantity') {
-        const w = field === 'width' ? Number(value) : Number(current.width || 0)
-        const h = field === 'height' ? Number(value) : Number(current.height || 0)
-        const q = field === 'quantity' ? Number(value) : Number(current.quantity || 1)
-        if (w > 0 && h > 0) {
-          const area = Number((w * h * q).toFixed(2))
-          current.area = area
+        const rawW = field === 'width' ? value : current.width
+        const rawH = field === 'height' ? value : current.height
+        const w = rawW !== null && rawW !== undefined && rawW !== '' ? Number(rawW) : null
+        const h = rawH !== null && rawH !== undefined && rawH !== '' ? Number(rawH) : null
+        const q = field === 'quantity' ? Number(value || 1) : Number(current.quantity || 1)
+
+        current.width = w
+        current.height = h
+        if (w !== null && h !== null && w > 0 && h > 0) {
+          current.area = Number((w * h).toFixed(4))
+        } else {
+          current.area = null
         }
       }
 
       if (field === 'unit_price' || field === 'quantity') {
-        const p = field === 'unit_price' ? Number(value) : Number(current.unit_price || 0)
-        const q = field === 'quantity' ? Number(value) : Number(current.quantity || 1)
+        const p = field === 'unit_price' ? Number(value || 0) : Number(current.unit_price || 0)
+        const q = field === 'quantity' ? Number(value || 1) : Number(current.quantity || 1)
         current.subtotal = Number((p * q).toFixed(2))
       }
 
+      updated[index] = current
+      return updated
+    })
+  }
+
+  const handleToggleDimensions = (index: number) => {
+    setItems((prev) => {
+      const updated = [...prev]
+      const current = { ...updated[index] }
+      if (current.width !== null || current.height !== null) {
+        current.width = null
+        current.height = null
+        current.area = null
+      } else {
+        current.width = 1.0
+        current.height = 1.0
+        current.area = 1.0
+      }
       updated[index] = current
       return updated
     })
@@ -293,18 +364,27 @@ export function QuoteFormModal({
     unitPrice: number
     totalPrice: number
   }) => {
-    setItems((prev) => [
-      ...prev,
-      {
+    setItems((prev) => {
+      const isFirstEmpty =
+        prev.length === 1 &&
+        !prev[0].description.trim() &&
+        (!prev[0].unit_price || prev[0].unit_price === 0)
+
+      const newItem: QuoteItemFormData = {
         description: calcItem.description,
-        quantity: calcItem.quantity,
+        quantity: calcItem.quantity || 1,
         width: calcItem.width,
         height: calcItem.height,
         area: calcItem.area,
         unit_price: calcItem.unitPrice,
         subtotal: calcItem.totalPrice,
-      },
-    ])
+      }
+
+      if (isFirstEmpty) {
+        return [newItem]
+      }
+      return [...prev, newItem]
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -782,23 +862,89 @@ export function QuoteFormModal({
                       </div>
                     </div>
 
-                    {/* Detalhes de cálculo / dimensões se houver */}
-                    {(Number(item.quantity || 1) > 1 || (item.width && item.height)) && (
-                      <div className="text-[11px] text-muted-foreground flex flex-wrap items-center gap-2 pt-1 border-t">
-                        {Number(item.quantity || 1) > 1 && (
-                          <span className="font-medium text-foreground/80">
-                            Conta: {item.quantity} × {formatCurrency(Number(item.unit_price || 0))} = {formatCurrency(item.subtotal)}
+                    {/* Painel de Medidas do Vidro (m²) & Cálculo */}
+                    {item.width !== null || item.height !== null ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t bg-muted/20 p-2.5 rounded-lg border border-primary/20">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] font-bold text-primary flex items-center gap-1 shrink-0">
+                            <Ruler className="h-3.5 w-3.5" /> Medidas do Vidro:
                           </span>
-                        )}
-                        {item.width && item.height && (
-                          <>
-                            <span>•</span>
-                            <span>
-                              Medidas: {item.width}m × {item.height}m
-                            </span>
-                            <span>•</span>
-                            <span>Área Total: {item.area} m²</span>
-                          </>
+
+                          <div className="flex items-center gap-1">
+                            <Label className="text-[10px] text-muted-foreground font-semibold">Largura:</Label>
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min={0.05}
+                                value={item.width ?? ''}
+                                onChange={(e) => handleItemChange(index, 'width', e.target.value)}
+                                placeholder="0.00"
+                                className="h-7 w-20 text-xs font-mono font-bold text-center bg-card pr-4"
+                              />
+                              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">m</span>
+                            </div>
+                          </div>
+
+                          <span className="text-muted-foreground font-bold text-xs">×</span>
+
+                          <div className="flex items-center gap-1">
+                            <Label className="text-[10px] text-muted-foreground font-semibold">Altura:</Label>
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min={0.05}
+                                value={item.height ?? ''}
+                                onChange={(e) => handleItemChange(index, 'height', e.target.value)}
+                                placeholder="0.00"
+                                className="h-7 w-20 text-xs font-mono font-bold text-center bg-card pr-4"
+                              />
+                              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">m</span>
+                            </div>
+                          </div>
+
+                          {item.width && item.height ? (
+                            <Badge
+                              variant="secondary"
+                              className="font-mono text-[11px] font-bold py-0.5 px-2 bg-primary/10 text-primary border-primary/30"
+                            >
+                              📐 {((item.width || 0) * (item.height || 0)).toFixed(2)} m²
+                              {Number(item.quantity || 1) > 1 && (
+                                <span className="ml-1 text-[10px] font-normal opacity-85">
+                                  (Total: {((item.width || 0) * (item.height || 0) * (item.quantity || 1)).toFixed(2)} m²)
+                                </span>
+                              )}
+                            </Badge>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleDimensions(index)}
+                            className="text-[10px] text-muted-foreground hover:text-destructive underline font-medium"
+                          >
+                            Remover medidas
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between pt-1.5 border-t text-xs">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDimensions(index)}
+                          className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1 py-0.5"
+                        >
+                          <Ruler className="h-3 w-3" /> + Informar Medidas do Vidro (Largura × Altura)
+                        </button>
+
+                        {Number(item.quantity || 1) > 1 && (
+                          <span className="text-[11px] text-muted-foreground font-mono">
+                            Conta: {item.quantity} × {formatCurrency(Number(item.unit_price || 0))}
+                          </span>
                         )}
                       </div>
                     )}
