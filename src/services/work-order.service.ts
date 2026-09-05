@@ -191,10 +191,6 @@ export const workOrderService = {
   },
 
   async createFromApprovedQuote(quote: any): Promise<WorkOrderWithRelations> {
-    const currentList = getLocalWorkOrders()
-    const existing = currentList.find((w) => w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number)))
-    if (existing) return existing
-
     const items: any[] = (quote.items || []).map((i: any) => ({
       service_id: i.service_id || null,
       product_id: null,
@@ -213,6 +209,84 @@ export const workOrderService = {
       })
     }
 
+    const notes = `Ordem gerada automaticamente do Orçamento #${quote.number}. ${quote.notes || ''}`
+
+    // 1. Verifica se já existe OS para este orçamento no Supabase
+    try {
+      const supabase = createClient()
+      const { data: existingList } = await supabase
+        .from('work_orders')
+        .select(`*, customer:customers(*), vehicle:vehicles(*), items:work_order_items(*)`)
+        .or(`quote_id.eq.${quote.id},notes.ilike.%#${quote.number}%`)
+
+      if (existingList && existingList.length > 0) {
+        const existing = existingList[0]
+        const { data: updated } = await supabase
+          .from('work_orders')
+          .update({
+            customer_id: quote.customer_id,
+            vehicle_id: quote.vehicle_id || null,
+            total: Number(quote.total || 0),
+            notes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+          .select(`*, customer:customers(*), vehicle:vehicles(*), items:work_order_items(*)`)
+          .single()
+
+        if (updated) {
+          await supabase.from('work_order_items').delete().eq('work_order_id', existing.id)
+          const itemsToInsert = items.map((i) => ({
+            work_order_id: existing.id,
+            service_id: i.service_id,
+            product_id: i.product_id,
+            description: i.description,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            subtotal: i.subtotal,
+          }))
+          if (itemsToInsert.length > 0) {
+            await supabase.from('work_order_items').insert(itemsToInsert)
+          }
+
+          const localList = getLocalWorkOrders()
+          const idx = localList.findIndex(
+            (w) => w.id === existing.id || w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number))
+          )
+          if (idx !== -1) {
+            localList[idx] = { ...updated, items }
+          } else {
+            localList.unshift({ ...updated, items })
+          }
+          saveLocalWorkOrders(localList)
+          return { ...updated, items }
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    // 2. Verifica se já existe no cache local
+    const currentList = getLocalWorkOrders()
+    const existingIdx = currentList.findIndex(
+      (w) => w.quote_id === quote.id || (w.notes && w.notes.includes(quote.number))
+    )
+
+    if (existingIdx !== -1) {
+      currentList[existingIdx] = {
+        ...currentList[existingIdx],
+        customer_id: quote.customer_id,
+        vehicle_id: quote.vehicle_id || null,
+        total: Number(quote.total || 0),
+        notes,
+        items,
+        updated_at: new Date().toISOString(),
+      }
+      saveLocalWorkOrders(currentList)
+      return currentList[existingIdx]
+    }
+
+    // 3. Caso não exista, cria uma nova OS
     const payload: WorkOrderFormData = {
       customer_id: quote.customer_id,
       vehicle_id: quote.vehicle_id || null,
@@ -222,7 +296,7 @@ export const workOrderService = {
       payment_status: 'PENDENTE',
       total: Number(quote.total || 0),
       scheduled_at: new Date().toISOString(),
-      notes: `Ordem gerada automaticamente do Orçamento #${quote.number}. ${quote.notes || ''}`,
+      notes,
       items,
     }
 

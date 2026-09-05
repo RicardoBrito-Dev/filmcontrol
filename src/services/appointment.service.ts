@@ -120,21 +120,91 @@ export const appointmentService = {
   },
 
   async createFromApprovedQuote(quote: any): Promise<AppointmentWithRelations> {
+    const itemsSummary = (quote.items || [])
+      .map((i: any) => i.description)
+      .filter(Boolean)
+      .join(', ') || 'Instalação de Películas'
+
+    const title = `${itemsSummary} (Orç. #${quote.number})`
+    const address = quote.customer?.address
+      ? `${quote.customer.address}, ${quote.customer.address_number || ''} ${quote.customer.address_complement || ''}`.trim()
+      : 'Na Loja'
+
+    const notes = `Orçamento #${quote.number} aprovado. Valor Total: R$ ${quote.total}.`
+
+    // 1. Verifica se já existe agendamento deste orçamento no Supabase
+    try {
+      const supabase = createClient()
+      const { data: existingList } = await supabase
+        .from('appointments')
+        .select(`*, customer:customers(*), vehicle:vehicles(*)`)
+        .or(`notes.ilike.%#${quote.number}%,title.ilike.%#${quote.number}%`)
+
+      if (existingList && existingList.length > 0) {
+        const existing = existingList[0]
+        const { data: updated } = await supabase
+          .from('appointments')
+          .update({
+            title,
+            customer_id: quote.customer_id,
+            vehicle_id: quote.vehicle_id || null,
+            address,
+            notes,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id)
+          .select(`*, customer:customers(*), vehicle:vehicles(*)`)
+          .single()
+
+        if (updated) {
+          const localList = getLocalAppointments()
+          const idx = localList.findIndex(
+            (a) => a.id === existing.id || (a.notes && a.notes.includes(quote.number))
+          )
+          if (idx !== -1) {
+            localList[idx] = updated
+          } else {
+            localList.unshift(updated)
+          }
+          saveLocalAppointments(localList)
+          return updated
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    // 2. Verifica se já existe no cache local
+    const currentList = getLocalAppointments()
+    const localExistingIndex = currentList.findIndex(
+      (a) =>
+        (a.notes && a.notes.includes(quote.number)) ||
+        (a.title && a.title.includes(quote.number))
+    )
+
+    if (localExistingIndex !== -1) {
+      currentList[localExistingIndex] = {
+        ...currentList[localExistingIndex],
+        customer_id: quote.customer_id,
+        vehicle_id: quote.vehicle_id || null,
+        title,
+        address,
+        notes,
+        customer: quote.customer || currentList[localExistingIndex].customer,
+        vehicle: quote.vehicle || currentList[localExistingIndex].vehicle,
+        updated_at: new Date().toISOString(),
+      }
+      saveLocalAppointments(currentList)
+      return currentList[localExistingIndex]
+    }
+
+    // 3. Caso não exista nenhum agendamento anterior, cria o primeiro
     const defaultStartTime = new Date()
     defaultStartTime.setDate(defaultStartTime.getDate() + 1)
     defaultStartTime.setHours(9, 0, 0, 0)
 
     const defaultEndTime = new Date(defaultStartTime)
     defaultEndTime.setHours(11, 30, 0, 0)
-
-    const itemsSummary = (quote.items || [])
-      .map((i: any) => i.description)
-      .join(', ') || 'Instalação de Películas'
-
-    const title = `${itemsSummary} (Orç. #${quote.number})`
-    const address = quote.customer?.address
-      ? `${quote.customer.address}, ${quote.customer.address_number || ''} ${quote.customer.address_complement || ''}`
-      : 'Na Loja'
 
     const payload: AppointmentFormData = {
       customer_id: quote.customer_id,
@@ -144,7 +214,7 @@ export const appointmentService = {
       end_time: defaultEndTime.toISOString(),
       address,
       status: 'CONFIRMADO',
-      notes: `Orçamento #${quote.number} aprovado. Valor Total: R$ ${quote.total}.`,
+      notes,
     }
 
     const created = await this.create(payload, quote.customer, quote.vehicle)
