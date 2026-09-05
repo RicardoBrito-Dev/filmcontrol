@@ -227,11 +227,50 @@ export const serviceService = {
         .order('category', { ascending: true })
         .order('name', { ascending: true })
 
-      if (!error && data && data.length >= 8) {
+      if (!error && data && data.length > 0) {
+        saveLocalServices(data)
         return data
       }
-    } catch {
-      // Fallback
+
+      // Se a tabela no Supabase estiver vazia, faz o seed inicial no banco
+      if (!error && data && data.length === 0) {
+        const { data: { user } } = await supabase.auth.getUser()
+        let companyId: string | undefined
+        if (user) {
+          const { data: profile } = await supabase.from('users').select('company_id').eq('id', user.id).single()
+          companyId = profile?.company_id
+        }
+        if (!companyId) {
+          const { data: comp } = await supabase.from('companies').select('id').limit(1).single()
+          companyId = comp?.id
+        }
+
+        if (companyId) {
+          const seedToInsert = initialSeedServices.map((s) => ({
+            company_id: companyId,
+            name: s.name,
+            category: s.category,
+            description: s.description,
+            unit: s.unit,
+            default_price: s.default_price,
+            estimated_cost: s.estimated_cost,
+            estimated_duration_minutes: s.estimated_duration_minutes,
+            is_active: true,
+          }))
+
+          const { data: inserted } = await supabase
+            .from('service_catalog')
+            .insert(seedToInsert)
+            .select()
+
+          if (inserted && inserted.length > 0) {
+            saveLocalServices(inserted)
+            return inserted
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao listar serviços do Supabase:', err)
     }
 
     return getLocalServices()
@@ -272,7 +311,11 @@ export const serviceService = {
             .select()
             .single()
 
-          if (!error && newService) return newService
+          if (!error && newService) {
+            const currentList = getLocalServices().filter((s) => s.id !== newService.id)
+            saveLocalServices([newService, ...currentList])
+            return newService
+          }
         }
       }
     } catch {
@@ -312,7 +355,17 @@ export const serviceService = {
         .select()
         .single()
 
-      if (!error && updated) return updated
+      if (!error && updated) {
+        const currentList = getLocalServices()
+        const index = currentList.findIndex((s) => s.id === id)
+        if (index !== -1) {
+          currentList[index] = updated
+        } else {
+          currentList.unshift(updated)
+        }
+        saveLocalServices(currentList)
+        return updated
+      }
     } catch {
       // Fallback
     }

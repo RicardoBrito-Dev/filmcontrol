@@ -75,6 +75,7 @@ export default function ConfiguracoesPage() {
   const [modalPriceM2, setModalPriceM2] = useState<number>(120)
 
   useEffect(() => {
+    // 1. Carrega do cache local imediatamente para render rápido
     const loadedPricing = filmPricingService.getPricing()
     setFilmPrices(loadedPricing)
 
@@ -89,6 +90,30 @@ export default function ConfiguracoesPage() {
     if (store.warrantyTerms) {
       setWarrantyTerms(store.warrantyTerms)
     }
+
+    // 2. Busca do Supabase para sincronizar entre Celular e PC
+    const syncFromCloud = async () => {
+      try {
+        const cloudSettings = await storeSettingsService.fetchSettings()
+        setCompanyName(cloudSettings.name || '')
+        setDocument(cloudSettings.document || '')
+        setPhone(cloudSettings.phone || '')
+        setWhatsapp(cloudSettings.whatsapp || '')
+        setEmail(cloudSettings.email || '')
+        setAddress(cloudSettings.address || '')
+        setPixKey(cloudSettings.pixKey || '')
+        if (cloudSettings.warrantyTerms) {
+          setWarrantyTerms(cloudSettings.warrantyTerms)
+        }
+        if (cloudSettings.filmPrices && Object.keys(cloudSettings.filmPrices).length > 0) {
+          setFilmPrices(cloudSettings.filmPrices)
+        }
+      } catch (e) {
+        console.error('Erro ao sincronizar com nuvem:', e)
+      }
+    }
+
+    syncFromCloud()
   }, [])
 
   const handlePriceChange = (key: string, field: 'pricePerM2' | 'costPerM2' | 'costPerLinearMeter' | 'rollWidth', value: number) => {
@@ -211,31 +236,40 @@ export default function ConfiguracoesPage() {
     })
   }
 
-  const handleSaveAll = (e: React.FormEvent) => {
+  const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
 
-    filmPricingService.saveAllPricing(filmPrices)
+    try {
+      filmPricingService.saveAllPricing(filmPrices)
 
-    storeSettingsService.saveSettings({
-      name: companyName,
-      document,
-      phone,
-      whatsapp,
-      email,
-      address,
-      pixKey,
-      warrantyTerms,
-    })
+      await storeSettingsService.saveSettings({
+        name: companyName,
+        document,
+        phone,
+        whatsapp,
+        email,
+        address,
+        pixKey,
+        warrantyTerms,
+        filmPrices,
+      })
 
-    setTimeout(() => {
-      setSaving(false)
       toast({
-        title: 'Configurações salvas com sucesso!',
-        description: 'Dados da sua loja, chave PIX, garantia e tabela de películas atualizados.',
+        title: 'Configurações salvas no banco de dados!',
+        description: 'Tabela de preços, bobinas e dados da loja sincronizados na nuvem para PC e celular.',
         variant: 'success' as 'default',
       })
-    }, 400)
+    } catch (err) {
+      console.error(err)
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Verifique sua conexão e tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const filmList = Object.entries(filmPrices)

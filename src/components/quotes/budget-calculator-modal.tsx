@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo, useEffect } from 'react'
 import {
@@ -87,6 +87,21 @@ export function BudgetCalculatorModal({
         setCostPerLinearMeter(costLinear)
         setSalePricePerM2(current.pricePerM2)
       }
+
+      // Sync latest cloud pricing from Supabase
+      filmPricingService.fetchPricing().then((cloudConfig) => {
+        if (cloudConfig) {
+          setPricingConfig(cloudConfig)
+          const latest = cloudConfig[selectedFilmKey] || cloudConfig.poliester
+          if (latest) {
+            const rw = latest.rollWidth || 1.52
+            setRollWidth(rw)
+            const costLinear = latest.costPerLinearMeter || Number(((latest.costPerM2 || 35) * rw).toFixed(2))
+            setCostPerLinearMeter(costLinear)
+            setSalePricePerM2(latest.pricePerM2)
+          }
+        }
+      }).catch(console.error)
     }
   }, [open, selectedFilmKey])
 

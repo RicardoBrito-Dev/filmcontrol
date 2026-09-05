@@ -1,3 +1,5 @@
+import { storeSettingsService } from './store-settings.service'
+
 export interface FilmPriceConfig {
   id: string
   name: string
@@ -18,7 +20,7 @@ export const DEFAULT_FILM_PRICES: Record<string, FilmPriceConfig> = {
     badge: 'Econômica',
     rollWidth: 1.52,
     costPerLinearMeter: 30.0,
-    costPerM2: 20.0, // 30.0 / 1.52 ~= 20.0
+    costPerM2: 20.0,
     pricePerM2: 70.0,
     description: 'Película fumê padrão para escurecimento e privacidade básica.',
   },
@@ -29,7 +31,7 @@ export const DEFAULT_FILM_PRICES: Record<string, FilmPriceConfig> = {
     badge: 'Profissional',
     rollWidth: 1.52,
     costPerLinearMeter: 53.0,
-    costPerM2: 35.0, // 53.0 / 1.52 ~= 35.0
+    costPerM2: 35.0,
     pricePerM2: 120.0,
     description: 'Película de poliéster com proteção UV, não desbota fácil e excelente acabamento.',
   },
@@ -40,7 +42,7 @@ export const DEFAULT_FILM_PRICES: Record<string, FilmPriceConfig> = {
     badge: 'Térmica / Premium',
     rollWidth: 1.52,
     costPerLinearMeter: 114.0,
-    costPerM2: 75.0, // 114.0 / 1.52 ~= 75.0
+    costPerM2: 75.0,
     pricePerM2: 250.0,
     description: 'Alta tecnologia com até 90% de rejeição de calor infravermelho.',
   },
@@ -51,7 +53,7 @@ export const DEFAULT_FILM_PRICES: Record<string, FilmPriceConfig> = {
     badge: 'Residencial / Comercial',
     rollWidth: 1.52,
     costPerLinearMeter: 68.0,
-    costPerM2: 45.0, // 68.0 / 1.52 ~= 45.0
+    costPerM2: 45.0,
     pricePerM2: 160.0,
     description: 'Efeito jateado para banheiros, portas, sacadas, consultórios e divisórias.',
   },
@@ -91,7 +93,6 @@ export const filmPricingService = {
     }
     try {
       const parsed = JSON.parse(data)
-      // Garantir compatibilidade se faltar rollWidth ou costPerLinearMeter
       const merged: Record<string, FilmPriceConfig> = { ...DEFAULT_FILM_PRICES }
       for (const [k, v] of Object.entries(parsed as Record<string, FilmPriceConfig>)) {
         const rollWidth = v.rollWidth || 1.52
@@ -108,6 +109,21 @@ export const filmPricingService = {
     } catch {
       return DEFAULT_FILM_PRICES
     }
+  },
+
+  async fetchPricing(): Promise<Record<string, FilmPriceConfig>> {
+    try {
+      const settings = await storeSettingsService.fetchSettings()
+      if (settings.filmPrices && Object.keys(settings.filmPrices).length > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(settings.filmPrices))
+        }
+        return this.getPricing()
+      }
+    } catch (err) {
+      console.error('Erro ao sincronizar preços com o banco de dados:', err)
+    }
+    return this.getPricing()
   },
 
   updatePricing(key: string, updates: Partial<FilmPriceConfig>): Record<string, FilmPriceConfig> {
@@ -146,9 +162,14 @@ export const filmPricingService = {
         ...updates,
       }
     }
+
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(current))
     }
+
+    // Persiste no banco de dados na nuvem
+    storeSettingsService.saveSettings({ filmPrices: current }).catch(console.error)
+
     return current
   },
 
@@ -158,6 +179,7 @@ export const filmPricingService = {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(current))
     }
+    storeSettingsService.saveSettings({ filmPrices: current }).catch(console.error)
     return current
   },
 
@@ -165,5 +187,6 @@ export const filmPricingService = {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(pricing))
     }
+    storeSettingsService.saveSettings({ filmPrices: pricing }).catch(console.error)
   },
 }
